@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import { useState } from "react"
@@ -7,7 +8,6 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Progress } from "@/components/ui/progress"
 import { ChefHat, Users, Utensils, ShoppingBag, Sparkles } from "lucide-react"
 
@@ -182,12 +182,12 @@ export default function AIOnboarding() {
             <div className="text-center mb-6">
               <ShoppingBag className="h-12 w-12 text-grovio-orange mx-auto mb-4" />
               <h3 className="text-xl font-semibold">Shopping habits & budget</h3>
-              <p className="text-gray-600">We'll tailor recommendations to your lifestyle</p>
+              <p className="text-gray-600">We&apos;ll tailor recommendations to your lifestyle</p>
             </div>
             
             <div className="space-y-4">
               <div>
-                <Label className="text-base font-medium">What's your typical grocery budget?</Label>
+                <Label className="text-base font-medium">What&apos;s your typical grocery budget?</Label>
                 <RadioGroup
                   value={data.budgetRange}
                   onValueChange={(value) => updateData("budgetRange", value)}
@@ -232,7 +232,7 @@ export default function AIOnboarding() {
             
             <div className="space-y-4">
               <div>
-                <Label className="text-base font-medium">What's your cooking skill level?</Label>
+                <Label className="text-base font-medium">What&apos;s your cooking skill level?</Label>
                 <RadioGroup
                   value={data.cookingSkill}
                   onValueChange={(value) => updateData("cookingSkill", value)}
@@ -279,7 +279,7 @@ export default function AIOnboarding() {
           <div className="space-y-6">
             <div className="text-center mb-6">
               <Sparkles className="h-12 w-12 text-grovio-orange mx-auto mb-4" />
-              <h3 className="text-xl font-semibold">Almost done! Let's personalize your experience</h3>
+              <h3 className="text-xl font-semibold">Almost done! Let&apos;s personalize your experience</h3>
               <p className="text-gray-600">Tell us your favorite ingredients for better recommendations</p>
             </div>
             
@@ -324,7 +324,7 @@ export default function AIOnboarding() {
             Welcome to Grovio AI! 🤖
           </CardTitle>
           <p className="text-gray-600">
-            Let's personalize your shopping experience with AI-powered recommendations
+            Let&apos;s personalize your shopping experience with AI-powered recommendations
           </p>
         </CardHeader>
         

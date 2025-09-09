@@ -1,9 +1,14 @@
+"use client"
+
 import Header from "@/components/header"
-import SearchBar from "@/components/search-bar"
-import CategoryGrid from "@/components/category-grid"
-import ProductGrid from "@/components/product-grid"
 import ChatbotWidget from "@/components/chatbot-widget"
-import { sampleProducts } from "@/lib/data"
+import SearchBar from "@/components/search-bar"
+import HeroSection from "@/components/hero-section"
+import FeaturedCategories from "@/components/featured-categories"
+import PromotionalBlocks from "@/components/promotional-blocks"
+import PopularProducts from "@/components/popular-products"
+import DailyBestSells from "@/components/daily-best-sells"
+import RightSidebar from "@/components/right-sidebar"
 
 export default function HomePage() {
   // In a real app, you'd get user data from authentication
@@ -13,21 +18,22 @@ export default function HomePage() {
     <div className="min-h-screen bg-gray-50">
       <Header user={user} />
 
-      <main className="container mx-auto px-4 py-8">
-        {/* Hero Section */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-6xl font-bold text-grovio-navy mb-4">Welcome to Grovio</h1>
-          <p className="text-xl text-gray-600 mb-8">
-            The modernized revolutionary grocery shopping platform that helps you shop smarter and better
-          </p>
-          <SearchBar />
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <SearchBar />
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
+          <div className="lg:col-span-3">
+            <HeroSection />
+            <FeaturedCategories />
+            <PromotionalBlocks />
+            <PopularProducts />
+            <DailyBestSells />
+          </div>
+
+          <div className="hidden lg:block">
+            <RightSidebar />
+          </div>
         </div>
-
-        {/* Categories */}
-        <CategoryGrid />
-
-        {/* Featured Products */}
-        <ProductGrid products={sampleProducts} />
       </main>
 
       <ChatbotWidget />

@@ -243,3 +243,36 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;  /* Safari and Chrome */
 }
+
+/* Global sleek scrollbar styles */
+/* Firefox */
+* {
+  scrollbar-width: thin;               /* slim */
+  scrollbar-color: #d97706 transparent; /* thumb, track */
+}
+
+/* WebKit (Chrome, Edge, Safari) */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;              /* subtle track */
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: rgba(211, 95, 14, 0.6); /* brand orange */
+  border-radius: 999px;
+  border: 2px solid transparent;       /* adds spacing illusion */
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(211, 95, 14, 0.8);
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background-color: rgb(211, 95, 14);
+}

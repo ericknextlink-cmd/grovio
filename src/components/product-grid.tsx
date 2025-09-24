@@ -14,16 +14,16 @@ interface ProductGridProps {
 
 export default function ProductGrid({ products, title = "Featured Products" }: ProductGridProps) {
   return (
-    <div className="mb-12">
+    <div className="mb-12 bg-white p-8 px-16 scale-[1.0]">
       <h2 className="text-2xl font-bold mb-6 text-grovio-navy">{title}</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {products.map((product) => (
-          <Card key={product.id} className="group hover:shadow-lg transition-shadow">
-            <Link href={`/product/${product.id}`}>
-              <CardContent className="p-4">
+          <Card key={product.id} className="group hover:shadow-lg transition-shadow h-full flex flex-col">
+            <Link href={`/product/${product.slug}`}>
+              <CardContent className="p-4 flex-1 flex flex-col">
                 <div className="relative mb-4">
                   <Image
-                    src={product.images[0] || "/placeholder.svg"}
+                    src={product.images[0] || "/logo.png"}
                     alt={product.name}
                     width={250}
                     height={200}
@@ -44,7 +44,7 @@ export default function ProductGrid({ products, title = "Featured Products" }: P
                     <span className="text-sm text-gray-500 ml-1">({product.reviews})</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mt-auto">
                   <span className="text-lg font-bold text-grovio-orange">{formatPrice(product.price)}</span>
                   {product.specifications.weight && (
                     <Badge variant="secondary" className="text-xs">
@@ -54,7 +54,7 @@ export default function ProductGrid({ products, title = "Featured Products" }: P
                 </div>
               </CardContent>
             </Link>
-            <CardFooter className="p-4 pt-0">
+            <CardFooter className="p-4 pt-0 mt-auto">
               <Button className="w-full bg-grovio-orange hover:bg-grovio-orange/90" disabled={!product.inStock}>
                 <ShoppingCart className="h-4 w-4 mr-2" />
                 Add to Cart

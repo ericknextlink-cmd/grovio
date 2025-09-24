@@ -9,9 +9,11 @@ export interface User {
 
 export interface Product {
   id: string
+  slug?: string
   name: string
   description: string
   price: number
+  originalPrice?: number
   images: string[]
   category: string
   subcategory?: string
@@ -30,6 +32,7 @@ export interface Product {
 
 export interface Category {
   id: string
+  slug?: string
   name: string
   icon: string
   subcategories?: string[]

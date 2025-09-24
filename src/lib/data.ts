@@ -3,66 +3,77 @@ import type { Product, Category } from "./types"
 export const categories: Category[] = [
   {
     id: "vegetables",
+    slug: "vegetables",
     name: "Vegetables",
     icon: "https://img.freepik.com/free-psd/vibrant-vegetable-harvest-colorful-collection-fresh-produce_191095-79960.jpg",
     subcategories: ["Leafy Greens", "Root Vegetables", "Fresh Herbs"],
   },
   {
     id: "seasonings",
+    slug: "seasonings-spices",
     name: "Seasonings & Spices",
     icon: "https://img.freepik.com/premium-photo/set-different-spices-sauce-bowls_185193-51424.jpg",
     subcategories: ["Cubes", "Powders", "Fresh Spices"],
   },
   {
     id: "dairy",
+    slug: "dairy-eggs",
     name: "Dairy & Eggs",
     icon: "https://img.freepik.com/premium-photo/milk-cheese-bottle-dairy_53876-321236.jpg",
     subcategories: ["Milk", "Eggs", "Dairy Products"],
   },
   {
     id: "grains",
+    slug: "rice-grains",
     name: "Rice & Grains",
     icon: "https://img.freepik.com/free-photo/view-allergens-commonly-found-grains_23-2150170285.jpg",
     subcategories: ["Local Rice", "Imported Rice", "Other Grains"],
   },
   {
     id: "canned",
+    slug: "canned-foods",
     name: "Canned Foods",
     icon: "https://img.freepik.com/premium-photo/open-tin-cans-with-different-preserved-products-wooden-table-flat-lay_495423-118953.jpg",
     subcategories: ["Fish", "Tomato Paste", "Preserved Foods"],
   },
   {
     id: "beverages",
+    slug: "beverages",
     name: "Beverages",
     icon: "https://img.freepik.com/free-photo/colorful-soda-drinks-macro-shot_53876-32239.jpg",
     subcategories: ["Hot Drinks", "Soft Drinks", "Juices"],
   },
   {
     id: "pasta",
+    slug: "pasta-noodles",
     name: "Pasta & Noodles",
     icon: "https://img.freepik.com/free-photo/front-view-raw-pasta-bowl_141793-17779.jpg",
     subcategories: ["Instant Noodles", "Pasta", "Spaghetti"],
   },
   {
     id: "cereals",
+    slug: "breakfast-cereals",
     name: "Breakfast Cereals",
     icon: "https://img.freepik.com/free-vector/breakfast-cereal-plates-realistic-set-with-different-tastes-isolated-vector-illustration_1284-79560.jpg",
     subcategories: ["Corn Flakes", "Granola", "Oatmeal"],
   },
   {
     id: "oils",
+    slug: "oils-spreads",
     name: "Oils & Spreads",
     icon: "https://img.freepik.com/free-photo/healthy-product-olive-oil_23-2151944031.jpg",
     subcategories: ["Cooking Oil", "Margarine", "Butter"],
   },
   {
     id: "flour",
+    slug: "flour-baking",
     name: "Flour & Baking",
     icon: "https://img.freepik.com/free-photo/stashed-flour-used-cooking_23-2149517214.jpg",
     subcategories: ["All Purpose Flour", "Bread Flour", "Baking Powder"],
   },
   {
     id: "meat",
+    slug: "protein",
     name: "Protein",
     icon: "https://img.freepik.com/premium-photo/different-types-raw-meat-steaks-beef-striploin-salmon-chicken-breast-top-view_89816-24154.jpg",
     subcategories: ["Chicken", "Fish", "Beef"],
@@ -70,9 +81,32 @@ export const categories: Category[] = [
 ]
 
 export const sampleProducts: Product[] = [
+  // Featured Rice Product (matches screenshot)
+  {
+    id: "0",
+    slug: "royal-basmati-rice-5kg",
+    name: "Royal White Basmati Rice",
+    description: "Premium quality basmati rice from the foothills of the Himalayas. Naturally aromatic and aged for superior taste and texture. Perfect for biryani, pilaf, and other rice dishes.",
+    price: 130,
+    originalPrice: 210,
+    images: ["/products/royal-rice.png"],
+    category: "grains",
+    subcategory: "Imported Rice",
+    brand: "Royal",
+    specifications: {
+      size: "5kg",
+      weight: "5kg",
+      type: "Long-Grain",
+      packaging: "Bag",
+    },
+    inStock: true,
+    rating: 4.6,
+    reviews: 124,
+  },
   // Seasonings & Spices
   {
     id: "1",
+    slug: "onga-classic-seasoning-cube",
     name: "Onga Classic Seasoning Cube",
     description: "Premium seasoning cube for authentic Ghanaian taste",
     price: 2.5,
@@ -91,6 +125,7 @@ export const sampleProducts: Product[] = [
   },
   {
     id: "2",
+    slug: "fresh-rosemary",
     name: "Fresh Rosemary",
     description: "Fresh aromatic rosemary for cooking",
     price: 3.0,
@@ -109,6 +144,7 @@ export const sampleProducts: Product[] = [
   },
   {
     id: "3",
+    slug: "black-pepper",
     name: "Black Pepper",
     description: "Premium ground black pepper for seasoning",
     price: 4.5,
@@ -127,6 +163,7 @@ export const sampleProducts: Product[] = [
   },
   {
     id: "4",
+    slug: "mixed-spices",
     name: "Mixed Spices",
     description: "Blend of aromatic spices for cooking",
     price: 5.0,
@@ -145,6 +182,7 @@ export const sampleProducts: Product[] = [
   },
   {
     id: "5",
+    slug: "garlic",
     name: "Garlic",
     description: "Fresh garlic bulbs for cooking",
     price: 8.0,
@@ -165,6 +203,7 @@ export const sampleProducts: Product[] = [
   // Dairy & Eggs
   {
     id: "6",
+    slug: "fresh-eggs",
     name: "Fresh Eggs",
     description: "Farm fresh eggs from local poultry",
     price: 18.0,
@@ -182,6 +221,7 @@ export const sampleProducts: Product[] = [
   },
   {
     id: "7",
+    slug: "ideal-milk",
     name: "Ideal Milk",
     description: "Premium quality milk for the whole family",
     price: 25.0,
@@ -200,6 +240,7 @@ export const sampleProducts: Product[] = [
   },
   {
     id: "8",
+    slug: "cheese",
     name: "Cheese",
     description: "Fresh cheese for cooking and snacking",
     price: 15.0,
@@ -220,6 +261,7 @@ export const sampleProducts: Product[] = [
   // Grains & Rice
   {
     id: "9",
+    slug: "rice-olonka",
     name: "Rice Olonka",
     description: "Premium quality local rice variety",
     price: 45.0,
@@ -238,6 +280,7 @@ export const sampleProducts: Product[] = [
   },
   {
     id: "10",
+    slug: "all-purpose-flour",
     name: "All Purpose Flour",
     description: "Versatile flour for all your baking needs",
     price: 12.0,
@@ -256,6 +299,7 @@ export const sampleProducts: Product[] = [
   },
   {
     id: "11",
+    slug: "flour",
     name: "Flour",
     description: "High quality flour for baking",
     price: 10.0,
@@ -276,6 +320,7 @@ export const sampleProducts: Product[] = [
   // Canned Foods
   {
     id: "12",
+    slug: "sardine",
     name: "Sardine",
     description: "Premium canned sardines in oil",
     price: 8.5,
@@ -296,6 +341,7 @@ export const sampleProducts: Product[] = [
   // Vegetables
   {
     id: "13",
+    slug: "fresh-tomatoes",
     name: "Fresh Tomatoes",
     description: "Fresh, ripe tomatoes perfect for cooking",
     price: 8.0,
@@ -313,6 +359,7 @@ export const sampleProducts: Product[] = [
   },
   {
     id: "14",
+    slug: "onions",
     name: "Onions",
     description: "Fresh onions for cooking",
     price: 6.0,
@@ -330,6 +377,7 @@ export const sampleProducts: Product[] = [
   },
   {
     id: "15",
+    slug: "cabbage",
     name: "Cabbage",
     description: "Fresh green cabbage",
     price: 7.0,
@@ -349,6 +397,7 @@ export const sampleProducts: Product[] = [
   // Meat & Fish
   {
     id: "16",
+    slug: "fresh-chicken",
     name: "Fresh Chicken",
     description: "Fresh local chicken meat",
     price: 35.0,
@@ -367,6 +416,7 @@ export const sampleProducts: Product[] = [
   },
   {
     id: "17",
+    slug: "fresh-fish",
     name: "Fresh Fish",
     description: "Fresh local fish",
     price: 28.0,
@@ -387,6 +437,7 @@ export const sampleProducts: Product[] = [
   // Pasta & Noodles
   {
     id: "18",
+    slug: "indomie-instant-noodles",
     name: "Indomie Instant Noodles",
     description: "Delicious instant noodles for quick meals",
     price: 3.5,
@@ -405,6 +456,7 @@ export const sampleProducts: Product[] = [
   },
   {
     id: "19",
+    slug: "pasta",
     name: "Pasta",
     description: "Quality pasta for Italian dishes",
     price: 6.0,
@@ -425,6 +477,7 @@ export const sampleProducts: Product[] = [
   // Breakfast Cereals
   {
     id: "20",
+    slug: "corn-flakes",
     name: "Corn Flakes",
     description: "Crispy corn flakes for breakfast",
     price: 12.0,
@@ -443,6 +496,7 @@ export const sampleProducts: Product[] = [
   },
   {
     id: "21",
+    slug: "granola",
     name: "Granola",
     description: "Healthy granola with nuts and fruits",
     price: 18.0,
@@ -463,6 +517,7 @@ export const sampleProducts: Product[] = [
   // Oils & Spreads
   {
     id: "22",
+    slug: "cooking-oil",
     name: "Cooking Oil",
     description: "Pure cooking oil for all your cooking needs",
     price: 15.0,
@@ -481,6 +536,7 @@ export const sampleProducts: Product[] = [
   },
   {
     id: "23",
+    slug: "blue-band-margarine",
     name: "Blue Band Margarine",
     description: "Creamy margarine for spreading and cooking",
     price: 8.0,
@@ -501,6 +557,7 @@ export const sampleProducts: Product[] = [
   // Beverages
   {
     id: "24",
+    slug: "milo-chocolate-drink",
     name: "Milo Chocolate Drink",
     description: "Nutritious chocolate malt drink for energy",
     price: 12.5,
@@ -519,6 +576,7 @@ export const sampleProducts: Product[] = [
   },
   {
     id: "25",
+    slug: "milo-tin",
     name: "Milo Tin",
     description: "Large tin of Milo chocolate drink powder",
     price: 35.0,
@@ -539,6 +597,7 @@ export const sampleProducts: Product[] = [
   // Other Products
   {
     id: "26",
+    slug: "honey",
     name: "Honey",
     description: "Pure natural honey",
     price: 22.0,
@@ -557,6 +616,7 @@ export const sampleProducts: Product[] = [
   },
   {
     id: "27",
+    slug: "vinegar",
     name: "Vinegar",
     description: "Apple cider vinegar for cooking and health",
     price: 8.5,
@@ -575,6 +635,7 @@ export const sampleProducts: Product[] = [
   },
   {
     id: "28",
+    slug: "beans",
     name: "Beans",
     description: "Fresh local beans",
     price: 12.0,
@@ -593,6 +654,7 @@ export const sampleProducts: Product[] = [
   },
   {
     id: "29",
+    slug: "fresh-fruits",
     name: "Fresh Fruits",
     description: "Assorted fresh seasonal fruits",
     price: 15.0,

@@ -54,11 +54,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Try LLM augmentation last (non-blocking safety net)
+    // Use generated response as primary, LLM as fallback only
     console.log("Generated response:", response)
     const llm = await generateWithGroq(message, { role, familySize, budget: extractedBudget })
     console.log("LLM response:", llm)
-    const finalText = formatAiResponse(llm ?? response)
+    // Use generated response first, only fallback to LLM if generated is empty
+    const finalText = formatAiResponse(response || (llm ?? ""))
     console.log("Final text:", finalText)
     return NextResponse.json({ message: finalText })
   } catch (e: any) {

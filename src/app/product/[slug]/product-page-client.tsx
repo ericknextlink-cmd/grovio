@@ -10,6 +10,8 @@ import { Star, ShoppingCart, Heart, Minus, Plus, ChevronRight } from "lucide-rea
 import { sampleProducts, categories } from "@/lib/data"
 import { formatPrice } from "@/lib/utils"
 import Header from "@/components/header"
+import { useFavorites } from "@/contexts/favorites-context"
+import { useCart } from "@/contexts/cart-context"
 
 interface ProductPageClientProps {
   slug: string
@@ -18,7 +20,8 @@ interface ProductPageClientProps {
 export default function ProductPageClient({ slug }: ProductPageClientProps) {
   const [quantity, setQuantity] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
-  const [isFavorited, setIsFavorited] = useState(false)
+  const { toggleFavorite, isFavorite } = useFavorites()
+  const { addToCart } = useCart()
 
   // Find product by slug
   const product = sampleProducts.find((p) => p.slug === slug) || sampleProducts[0]
@@ -29,12 +32,14 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
   }
 
   const handleAddToCart = () => {
-    // TODO: Add to cart logic
-    console.log("Adding to cart:", { product: product.name, quantity })
+    // Add product multiple times based on quantity
+    for (let i = 0; i < quantity; i++) {
+      addToCart(product)
+    }
   }
 
   const handleToggleFavorite = () => {
-    setIsFavorited(!isFavorited)
+    toggleFavorite(product)
   }
 
   const savings = product.originalPrice ? product.originalPrice - product.price : 0
@@ -189,10 +194,10 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
                   size="icon"
                   onClick={handleToggleFavorite}
                   className={`h-12 w-12 rounded-full ${
-                    isFavorited ? "bg-red-50 border-red-200 text-red-500" : "border-gray-200"
+                    isFavorite(product.id) ? "bg-[#D35F0E] border-[#D35F0E] text-white" : "border-gray-200"
                   }`}
                 >
-                  <Heart className={`h-5 w-5 ${isFavorited ? "fill-current" : ""}`} />
+                  <Heart className={`h-5 w-5 ${isFavorite(product.id) ? "fill-current" : ""}`} />
                 </Button>
               </div>
 

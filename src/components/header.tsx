@@ -6,11 +6,28 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Heart, ShoppingCart, User, Search, Menu, X } from "lucide-react"
+<<<<<<< Updated upstream
 import { useAuth } from "@/contexts/AuthContext"
+=======
+import { useCart } from "@/contexts/cart-context"
+import { useFavorites } from "@/contexts/favorites-context"
+import { useAuthStore } from "@/stores/auth-store"
+>>>>>>> Stashed changes
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+<<<<<<< Updated upstream
   const { user, isAuthenticated, logout } = useAuth()
+=======
+  const { getUniqueItemCount } = useCart()
+  const { getFavoritesCount } = useFavorites()
+  const { user: authUser, isAuthenticated, signout } = useAuthStore()
+  const cartItemCount = getUniqueItemCount()
+  const favoritesCount = getFavoritesCount()
+  
+  // Use auth user if available, otherwise fall back to prop
+  const currentUser = authUser || user
+>>>>>>> Stashed changes
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -53,6 +70,7 @@ export default function Header() {
           <div className="flex items-center space-x-3">
             {isAuthenticated ? (
               <>
+<<<<<<< Updated upstream
                 <Link href="/profile">
                   <Button variant="outline" className="border-white text-white hover:bg-white hover:text-[#181725] px-4 py-2 text-sm rounded-full bg-transparent">
                     {user?.firstName} {user?.lastName}
@@ -61,6 +79,14 @@ export default function Header() {
                 <Button
                   onClick={logout}
                   variant="outline"
+=======
+                <span className="text-white text-sm">
+                  Welcome, {currentUser?.firstName || currentUser?.fullName || 'User'}
+                </span>
+                <Button 
+                  onClick={signout}
+                  variant="outline" 
+>>>>>>> Stashed changes
                   className="border-white text-white hover:bg-white hover:text-[#181725] px-4 py-2 text-sm rounded-full bg-transparent"
                 >
                   Logout
@@ -80,6 +106,7 @@ export default function Header() {
                 </Link>
               </>
             )}
+<<<<<<< Updated upstream
             <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8">
               <Heart className="h-4 w-4" />
             </Button>
@@ -94,6 +121,35 @@ export default function Header() {
               </Link>
             )}
 
+=======
+            <Link href="/favorites">
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 relative">
+                <Heart className="h-4 w-4" />
+                {favoritesCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-[#D35F0E] text-white text-xs rounded-full h-2 w-2"></span>
+                )}
+              </Button>
+            </Link>
+            <Link href="/cart">
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 relative">
+                <ShoppingCart className="h-4 w-4" />
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-[#D35F0E] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                    {cartItemCount}
+                  </span>
+                )}
+                {cartItemCount === 0 && (
+                  <span className="absolute -top-1 -right-1 bg-[#D35F0E] text-white text-xs rounded-full h-2 w-2"></span>
+                )}
+              </Button>
+            </Link>
+            <Link href="/profile">
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8">
+                <User className="h-4 w-4" />
+              </Button>
+            </Link>
+            
+>>>>>>> Stashed changes
             {/* Mobile Menu Button - Only visible on mobile */}
             <Button
               variant="ghost"
@@ -166,6 +222,7 @@ export default function Header() {
               <div className="flex flex-col space-y-2 pt-2 border-t border-white/20">
                 {isAuthenticated ? (
                   <>
+<<<<<<< Updated upstream
                     <Link
                       href="/profile"
                       className="text-white hover:text-[#D35F0E] font-medium transition-colors py-2"
@@ -176,6 +233,14 @@ export default function Header() {
                     <button
                       onClick={() => {
                         logout()
+=======
+                    <span className="text-white text-sm py-2">
+                      Welcome, {currentUser?.firstName || currentUser?.fullName || 'User'}
+                    </span>
+                    <button 
+                      onClick={() => {
+                        signout()
+>>>>>>> Stashed changes
                         setIsMobileMenuOpen(false)
                       }}
                       className="text-white hover:text-[#D35F0E] font-medium transition-colors py-2 text-left"
@@ -185,15 +250,25 @@ export default function Header() {
                   </>
                 ) : (
                   <>
+<<<<<<< Updated upstream
                     <Link
                       href="/login"
+=======
+                    <Link 
+                      href="/login" 
+>>>>>>> Stashed changes
                       className="text-white hover:text-[#D35F0E] font-medium transition-colors py-2"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       Login
                     </Link>
+<<<<<<< Updated upstream
                     <Link
                       href="/signup"
+=======
+                    <Link 
+                      href="/signup" 
+>>>>>>> Stashed changes
                       className="text-white hover:text-[#D35F0E] font-medium transition-colors py-2"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >

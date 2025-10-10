@@ -12,6 +12,7 @@ export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false)
   const [showShoppingAssistant, setShowShoppingAssistant] = useState(false)
   const [lastAIResponse, setLastAIResponse] = useState<string>("")
+  const [lastCartData, setLastCartData] = useState<any>(null)
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -56,9 +57,11 @@ export default function ChatbotWidget() {
       const data = await res.json()
       console.log("Response data:", data)
       let text = "I ran into an issue understanding the request. Try rephrasing."
+      let cartData = null
       
       if (data?.message && typeof data.message === "string") {
         text = data.message
+        cartData = data.cartData || null
       } else if (data?.error && typeof data.error === "string") {
         text = `Error: ${data.error}`
       } else if (!res.ok) {
@@ -73,7 +76,9 @@ export default function ChatbotWidget() {
               setMessages((prev) => [...prev, botResponse])
               console.log("=== SETTING AI RESPONSE ===")
               console.log("Setting lastAIResponse:", text)
+              console.log("Setting lastCartData:", cartData)
               setLastAIResponse(text) // Store the AI response for shopping cart
+              setLastCartData(cartData) // Store the cart data for structured response
     } catch (e) {
       console.log(e)
       const botResponse = {
@@ -98,6 +103,7 @@ export default function ChatbotWidget() {
                   <AIShoppingAssistant 
                     onClose={() => setShowShoppingAssistant(false)} 
                     aiResponse={lastAIResponse}
+                    cartData={lastCartData}
                   />
                 </>
               )}

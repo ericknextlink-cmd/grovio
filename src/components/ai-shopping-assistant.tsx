@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Minus, Plus, X } from "lucide-react"
+import { Minus, Plus, X, ExternalLink } from "lucide-react"
 import { products } from "@/lib/products"
+import { useCart } from "@/contexts/cart-context"
 
 interface CartItem {
   id: string
@@ -15,134 +17,85 @@ interface CartItem {
   price: number
   quantity: number
   image: string
+  reason?: string
+  slug?: string
 }
 
+interface CartData {
+  products: Array<{
+    id: string
+    name: string
+    price: number
+    quantity: number
+    reason: string
+  }>
+  totalSavings?: number
+  budget?: number
+  rationale?: string
+}
 
 interface AIShoppingAssistantProps {
   onClose: () => void
   aiResponse?: string
+  cartData?: CartData | null
 }
 
-// Parse AI response to extract product information
-const parseAIResponse = (response: string): CartItem[] => {
+// Convert structured cart data to cart items with full product details
+const convertCartDataToItems = (cartData: CartData | null): CartItem[] => {
+  if (!cartData?.products) return []
+  
+  console.log("=== CONVERTING CART DATA ===")
+  console.log("Cart data:", cartData)
+  
   const items: CartItem[] = []
   
-  // Remove HTML tags and clean up the response
-  const cleanResponse = response.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ')
-  
-  console.log("=== PARSING AI RESPONSE ===")
-  console.log("Clean response:", cleanResponse)
-  
-  // Look for patterns like "• Product Name - ₵price"
-  const lines = cleanResponse.split('\n').filter(line => line.trim())
-  console.log("Split lines:", lines)
-  
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-    console.log(`Processing line ${i + 1}:`, line)
+  for (const item of cartData.products) {
+    // Find the full product details
+    const product = products.find(p => p.id === item.id)
     
-    // Match pattern: "• Product Name - ₵price" (flexible bullet character)
-    let match = line.match(/[•·▪▫]\s*([^-]+?)\s*-\s*₵?(\d+(?:\.\d+)?)/)
-    
-    // Fallback: try without bullet character
-    if (!match) {
-      match = line.match(/^\s*([^-]+?)\s*-\s*₵?(\d+(?:\.\d+)?)/)
-    }
-    
-    // Another fallback: try with different dash patterns
-    if (!match) {
-      match = line.match(/[•·▪▫]?\s*([^-]+?)\s*[-–—]\s*₵?(\d+(?:\.\d+)?)/)
-    }
-    
-    console.log("Match result:", match)
-    
-    if (match) {
-      const productName = match[1].trim()
-      const price = parseFloat(match[2])
-      
-      console.log("Matched product:", { productName, price })
-      
-      // Find matching product in our database
-      const product = products.find(p => {
-        const pName = p.name.toLowerCase()
-        const aName = productName.toLowerCase()
-        
-        console.log(`Comparing "${pName}" with "${aName}"`)
-        
-        // Try exact match first
-        if (pName === aName) {
-          console.log("Exact match found!")
-          return true
-        }
-        
-        // Try contains match
-        if (pName.includes(aName) || aName.includes(pName)) {
-          console.log("Contains match found!")
-          return true
-        }
-        
-        // Try word-by-word matching
-        const pWords = pName.split(/\s+/)
-        const aWords = aName.split(/\s+/)
-        const commonWords = pWords.filter(word => aWords.includes(word))
-        const similarity = commonWords.length / Math.min(pWords.length, aWords.length)
-        
-        console.log(`Word similarity: ${similarity} (${commonWords.length}/${Math.min(pWords.length, aWords.length)})`)
-        
-        if (similarity >= 0.6) {
-          console.log("Word similarity match found!")
-          return true
-        }
-        
-        return false
-      })
-      
-      console.log("Found product:", product)
-      
-      if (product) {
-        const newItem = {
-          id: product.id,
-          name: product.name,
-          description: product.description || product.category,
-          size: product.specifications?.size || product.specifications?.weight || "1 unit",
-          price: product.price,
-          quantity: 1,
-          image: product.images?.[0] || "/products/default.png"
-        }
-        items.push(newItem)
-        console.log("Added item to cart:", newItem)
-      } else {
-        console.log("No matching product found for:", productName)
+    if (product) {
+      const cartItem: CartItem = {
+        id: product.id,
+        name: product.name,
+        description: product.description || product.category,
+        size: product.specifications?.size || product.specifications?.weight || "1 unit",
+        price: product.price,
+        quantity: item.quantity,
+        image: product.images?.[0] || "/grocery.png",
+        reason: item.reason,
+        slug: product.slug
       }
+      items.push(cartItem)
+      console.log("Added cart item:", cartItem)
     } else {
-      console.log("No match found for line:", line)
+      console.log("Product not found for ID:", item.id)
     }
   }
   
-  console.log("=== FINAL PARSED ITEMS ===")
-  console.log("Total items found:", items.length)
+  console.log("=== FINAL CART ITEMS ===")
+  console.log("Total items:", items.length)
   console.log("Items:", items)
   return items
 }
 
-export function AIShoppingAssistant({ onClose, aiResponse }: AIShoppingAssistantProps) {
+export function AIShoppingAssistant({ onClose, aiResponse, cartData }: AIShoppingAssistantProps) {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
+  const { addToCart } = useCart()
 
-  // Parse AI response and populate cart
+  // Convert structured cart data to cart items
   useEffect(() => {
-    console.log("=== AI RESPONSE EFFECT TRIGGERED ===")
-    console.log("AI Response received:", aiResponse)
-    if (aiResponse) {
-      console.log("Parsing AI response...")
-      const parsedItems = parseAIResponse(aiResponse)
-      console.log("Setting cart items:", parsedItems)
-      setCartItems(parsedItems)
+    console.log("=== CART DATA EFFECT TRIGGERED ===")
+    console.log("Cart data received:", cartData)
+    if (cartData) {
+      console.log("Converting cart data...")
+      const items = convertCartDataToItems(cartData)
+      console.log("Setting cart items:", items)
+      setCartItems(items)
     } else {
-      console.log("No AI response provided")
+      console.log("No cart data provided")
       setCartItems([])
     }
-  }, [aiResponse])
-
+  }, [cartData])
 
   const updateQuantity = (id: string, newQuantity: number) => {
     if (newQuantity <= 0) {
@@ -161,8 +114,18 @@ export function AIShoppingAssistant({ onClose, aiResponse }: AIShoppingAssistant
   }
 
   const addAllToCart = () => {
-    // TODO: Add all items to main cart
-    console.log("Adding all items to cart:", cartItems)
+    // Add all AI suggested items to the main cart
+    cartItems.forEach(item => {
+      const product = products.find(p => p.id === item.id)
+      if (product) {
+        // Add the product multiple times based on quantity
+        for (let i = 0; i < item.quantity; i++) {
+          addToCart(product)
+        }
+      }
+    })
+    console.log("Added all AI items to cart:", cartItems)
+    onClose() // Close the AI assistant after adding items
   }
 
   const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0)
@@ -186,13 +149,16 @@ export function AIShoppingAssistant({ onClose, aiResponse }: AIShoppingAssistant
           <h2 className="text-xl font-semibold text-gray-800">
             AI Shopping Assistant Suggestions
           </h2>
+          {cartData?.rationale && (
+            <p className="text-sm text-gray-600 mt-1">{cartData.rationale}</p>
+          )}
         </div>
         
         {/* Scrollable Items List */}
         <ScrollArea className="flex-1 p-4">
           <div className="space-y-4">
             {cartItems.map((item) => (
-              <div key={item.id} className="flex items-center space-x-4 p-3 border border-gray-200 rounded-lg">
+              <div key={item.id} className="flex items-center space-x-4 p-3 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
                 <Image
                   src={item.image}
                   alt={item.name}
@@ -202,9 +168,30 @@ export function AIShoppingAssistant({ onClose, aiResponse }: AIShoppingAssistant
                 />
                 
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-gray-900 truncate">{item.name}</h3>
-                  <p className="text-sm text-gray-600">{item.description}</p>
-                  <p className="text-xs text-gray-500 mb-2">{item.size}</p>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900 truncate">{item.name}</h3>
+                      <p className="text-sm text-gray-600">{item.description}</p>
+                      <p className="text-xs text-gray-500 mb-2">{item.size}</p>
+                      {item.reason && (
+                        <p className="text-xs text-[#D35F0E] font-medium mb-2">{item.reason}</p>
+                      )}
+                    </div>
+                    
+                    {/* Product Link Button */}
+                    {item.slug && (
+                      <Link href={`/product/${item.slug}`}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-gray-400 hover:text-[#D35F0E]"
+                          title="View Product Details"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
                   
                   {/* Counter and trash under the weight */}
                   <div className="flex items-center space-x-2">
@@ -233,7 +220,7 @@ export function AIShoppingAssistant({ onClose, aiResponse }: AIShoppingAssistant
                       className="h-8 w-8 text-red-500 hover:text-red-700 ml-4"
                       onClick={() => removeItem(item.id)}
                     >
-                      <Image src="/trash.svg" alt="Trash" width={20} height={20} />
+                      <Image src="/Trash.svg" alt="Trash" width={20} height={20} />
                     </Button>
                   </div>
                 </div>
@@ -244,23 +231,40 @@ export function AIShoppingAssistant({ onClose, aiResponse }: AIShoppingAssistant
                 </div>
               </div>
             ))}
+            
+            {cartItems.length === 0 && (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No items in your AI suggestions yet.</p>
+                <p className="text-sm text-gray-400 mt-1">Ask the AI for product recommendations!</p>
+              </div>
+            )}
           </div>
         </ScrollArea>
 
         {/* Bottom Section - Static */}
-        <div className="border-t rounded-b-lg border-gray-200 p-4 space-y-4 bg-white">
-          <div className="flex justify-between items-center">
-            <Button 
-              className="w-[30%] bg-[#D35F0E] hover:bg-[#D35F0E]/90 text-white font-medium py-3 text-lg rounded-full"
-              onClick={addAllToCart}
-            >
-              Add All to Cart
-            </Button>
-              <span className="text-lg font-semibold text-gray-800">
-                Subtotal ({totalItems} items): GH₵ {subtotal}
-              </span>
+        {cartItems.length > 0 && (
+          <div className="border-t rounded-b-lg border-gray-200 p-4 space-y-4 bg-white">
+            {cartData?.totalSavings && cartData.totalSavings > 0 && (
+              <div className="text-center">
+                <p className="text-sm text-green-600 font-medium">
+                  💰 You save GH₵ {cartData.totalSavings.toFixed(2)} with this bundle!
+                </p>
+              </div>
+            )}
+            
+            <div className="flex justify-between items-center">
+              <Button 
+                className="w-[30%] bg-[#D35F0E] hover:bg-[#D35F0E]/90 text-white font-medium py-3 text-lg rounded-full"
+                onClick={addAllToCart}
+              >
+                Add All to Cart
+              </Button>
+                <span className="text-lg font-semibold text-gray-800">
+                  Subtotal ({totalItems} items): GH₵ {subtotal.toFixed(2)}
+                </span>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

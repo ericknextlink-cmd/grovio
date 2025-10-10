@@ -6,17 +6,11 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Heart, ShoppingCart, User, Search, Menu, X } from "lucide-react"
+import { useAuth } from "@/contexts/AuthContext"
 
-interface HeaderProps {
-  user: {
-    fullName: string
-    username: string
-  } | null
-}
-
-export default function Header({ user = null }: HeaderProps) {
+export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  user?.fullName.toString()
+  const { user, isAuthenticated, logout } = useAuth()
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -44,9 +38,9 @@ export default function Header({ user = null }: HeaderProps) {
           {/* Search Bar - Hidden on mobile */}
           <div className="hidden lg:flex items-center flex-1 max-w-md mx-8">
             <div className="relative w-full">
-              <Input 
-                type="text" 
-                placeholder="Search for products..." 
+              <Input
+                type="text"
+                placeholder="Search for products..."
                 className="w-full pl-4 pr-12 py-2 bg-white text-gray-900 rounded-lg border-0 focus:ring-2 focus:ring-[#D35F0E]"
               />
               <Button className="absolute right-1 top-1/2 transform -translate-y-1/2 bg-[#D35F0E] hover:bg-[#D35F0E]/90 h-8 w-8 p-0">
@@ -57,30 +51,53 @@ export default function Header({ user = null }: HeaderProps) {
 
           {/* Action Buttons */}
           <div className="flex items-center space-x-3">
-            <Link href="/signup">
-              <Button className="bg-[#D35F0E] rounded-full hover:bg-[#D35F0E]/90 text-white px-4 py-2 text-sm">
-                Sign Up
-              </Button>
-            </Link>
-            <Link href="/login">
-              <Button variant="outline" className="border-white text-white hover:bg-white hover:text-[#181725] px-4 py-2 text-sm rounded-full bg-transparent">
-                Login
-              </Button>
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link href="/profile">
+                  <Button variant="outline" className="border-white text-white hover:bg-white hover:text-[#181725] px-4 py-2 text-sm rounded-full bg-transparent">
+                    {user?.firstName} {user?.lastName}
+                  </Button>
+                </Link>
+                <Button
+                  onClick={logout}
+                  variant="outline"
+                  className="border-white text-white hover:bg-white hover:text-[#181725] px-4 py-2 text-sm rounded-full bg-transparent"
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link href="/signup">
+                  <Button className="bg-[#D35F0E] rounded-full hover:bg-[#D35F0E]/90 text-white px-4 py-2 text-sm">
+                    Sign Up
+                  </Button>
+                </Link>
+                <Link href="/login">
+                  <Button variant="outline" className="border-white text-white hover:bg-white hover:text-[#181725] px-4 py-2 text-sm rounded-full bg-transparent">
+                    Login
+                  </Button>
+                </Link>
+              </>
+            )}
             <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8">
               <Heart className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8">
               <ShoppingCart className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8">
-              <User className="h-4 w-4" />
-            </Button>
-            
+            {isAuthenticated && (
+              <Link href="/profile">
+                <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8">
+                  <User className="h-4 w-4" />
+                </Button>
+              </Link>
+            )}
+
             {/* Mobile Menu Button - Only visible on mobile */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="text-white hover:bg-white/10 w-8 h-8 lg:hidden"
               onClick={toggleMobileMenu}
             >
@@ -96,9 +113,9 @@ export default function Header({ user = null }: HeaderProps) {
         {/* Mobile Search Bar */}
         <div className="lg:hidden mt-4">
           <div className="relative w-full">
-            <Input 
-              type="text" 
-              placeholder="Search for products..." 
+            <Input
+              type="text"
+              placeholder="Search for products..."
               className="w-full pl-4 pr-12 py-2 bg-white text-gray-900 rounded-lg border-0 focus:ring-2 focus:ring-[#D35F0E]"
             />
             <Button className="absolute right-1 top-1/2 transform -translate-y-1/2 bg-[#D35F0E] hover:bg-[#D35F0E]/90 h-8 w-8 p-0">
@@ -111,56 +128,79 @@ export default function Header({ user = null }: HeaderProps) {
         {isMobileMenuOpen && (
           <nav className="lg:hidden mt-4 pb-4 border-t border-white/20 pt-4">
             <div className="flex flex-col space-y-3">
-              <Link 
-                href="/" 
+              <Link
+                href="/"
                 className="text-white hover:text-[#D35F0E] font-medium transition-colors py-2"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Home
               </Link>
-              <Link 
-                href="/products" 
+              <Link
+                href="/products"
                 className="text-white hover:text-[#D35F0E] font-medium transition-colors py-2"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Products
               </Link>
-              <Link 
-                href="/about" 
+              <Link
+                href="/about"
                 className="text-white hover:text-[#D35F0E] font-medium transition-colors py-2"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 About Us
               </Link>
-              <Link 
-                href="/shop" 
+              <Link
+                href="/shop"
                 className="text-white hover:text-[#D35F0E] font-medium transition-colors py-2"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Shop
               </Link>
-              <Link 
-                href="/contact" 
+              <Link
+                href="/contact"
                 className="text-white hover:text-[#D35F0E] font-medium transition-colors py-2"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Contacts
               </Link>
               <div className="flex flex-col space-y-2 pt-2 border-t border-white/20">
-                <Link 
-                  href="/login" 
-                  className="text-white hover:text-[#D35F0E] font-medium transition-colors py-2"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Login
-                </Link>
-                <Link 
-                  href="/signup" 
-                  className="text-white hover:text-[#D35F0E] font-medium transition-colors py-2"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Sign Up
-                </Link>
+                {isAuthenticated ? (
+                  <>
+                    <Link
+                      href="/profile"
+                      className="text-white hover:text-[#D35F0E] font-medium transition-colors py-2"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    <button
+                      onClick={() => {
+                        logout()
+                        setIsMobileMenuOpen(false)
+                      }}
+                      className="text-white hover:text-[#D35F0E] font-medium transition-colors py-2 text-left"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      className="text-white hover:text-[#D35F0E] font-medium transition-colors py-2"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      href="/signup"
+                      className="text-white hover:text-[#D35F0E] font-medium transition-colors py-2"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Sign Up
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </nav>

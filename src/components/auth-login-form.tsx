@@ -5,20 +5,57 @@ import type React from "react"
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useAuth } from "@/contexts/AuthContext"
+import { useToast } from "@/hooks/use-toast"
 
 export function LoginForm() {
+  const router = useRouter()
+  const { toast } = useToast()
+  const { login } = useAuth()
+  const [isLoading, setIsLoading] = useState(false)
+
   const [formData, setFormData] = useState({ emailOrUsername: "", password: "" })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: hook into real auth
-    console.log("Login attempt:", formData)
+    setIsLoading(true)
+
+    try {
+      const response = await login(formData.emailOrUsername, formData.password)
+
+      if (response.success) {
+        toast({
+          title: "Welcome back!",
+          description: "You have successfully signed in.",
+        })
+
+        // Redirect to dashboard or home page
+        router.push('/')
+      } else {
+        toast({
+          title: "Sign in failed",
+          description: response.message || "Please check your credentials and try again.",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error('Signin error:', error)
+      toast({
+        title: "Sign in failed",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
+    // TODO: Implement Google OAuth flow
     console.log("Google login")
   }
 
@@ -34,30 +71,34 @@ export function LoginForm() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="emailOrUsername" className="text-sm font-medium text-gray-700">Email Address or Mobile Number</Label>
-          <Input 
-            id="emailOrUsername" 
-            type="text" 
-            placeholder="e.g. you@example.com" 
-            value={formData.emailOrUsername} 
-            onChange={(e) => setFormData({ ...formData, emailOrUsername: e.target.value })} 
-            className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E]"
-            required 
+          <Input
+            id="emailOrUsername"
+            type="text"
+            placeholder="e.g. you@example.com"
+            value={formData.emailOrUsername}
+            onChange={(e) => setFormData({ ...formData, emailOrUsername: e.target.value })}
+            className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E] text-black"
+            required
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="password" className="text-sm font-medium text-gray-700">Password</Label>
-          <Input 
-            id="password" 
-            type="password" 
-            placeholder="Enter your password" 
-            value={formData.password} 
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })} 
-            className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E]"
-            required 
+          <Input
+            id="password"
+            type="password"
+            placeholder="Enter your password"
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E] text-black"
+            required
           />
         </div>
-        <Button type="submit" className="w-full rounded-full bg-[#D35F0E] hover:bg-[#D35F0E]/90 text-white font-medium py-8 text-2xl mt-6">
-          Sign in
+        <Button
+          type="submit"
+          disabled={isLoading}
+          className="w-full rounded-full bg-[#D35F0E] hover:bg-[#D35F0E]/90 text-white font-medium py-8 text-2xl mt-6 disabled:opacity-50"
+        >
+          {isLoading ? "Signing in..." : "Sign in"}
         </Button>
       </form>
 

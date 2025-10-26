@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { api, tokenManager } from '@/lib/api-client'
@@ -72,7 +74,14 @@ export const useAuthStore = create<AuthState>()(
             return { success: false, message }
           }
         } catch (error: any) {
-          const errorMessage = error.response?.data?.message || 'Signup failed'
+          const responseData = error.response?.data
+          let errorMessage = responseData?.message || 'Signup failed'
+          
+          // Combine message with first error from errors array if available
+          if (responseData?.errors && Array.isArray(responseData.errors) && responseData.errors.length > 0) {
+            errorMessage = `${errorMessage}: ${responseData.errors[0]}`
+          }
+          
           set({ error: errorMessage, isLoading: false })
           return { success: false, message: errorMessage }
         }
@@ -93,7 +102,14 @@ export const useAuthStore = create<AuthState>()(
             return { success: false, message }
           }
         } catch (error: any) {
-          const errorMessage = error.response?.data?.message || 'Signin failed'
+          const responseData = error.response?.data
+          let errorMessage = responseData?.message || 'Signin failed'
+          
+          // Combine message with first error from errors array if available
+          if (responseData?.errors && Array.isArray(responseData.errors) && responseData.errors.length > 0) {
+            errorMessage = `${errorMessage}: ${responseData.errors[0]}`
+          }
+          
           set({ error: errorMessage, isLoading: false })
           return { success: false, message: errorMessage }
         }
@@ -114,7 +130,14 @@ export const useAuthStore = create<AuthState>()(
             return { success: false, message }
           }
         } catch (error: any) {
-          const errorMessage = error.response?.data?.message || 'Google signin failed'
+          const responseData = error.response?.data
+          let errorMessage = responseData?.message || 'Google signin failed'
+          
+          // Combine message with first error from errors array if available
+          if (responseData?.errors && Array.isArray(responseData.errors) && responseData.errors.length > 0) {
+            errorMessage = `${errorMessage}: ${responseData.errors[0]}`
+          }
+          
           set({ error: errorMessage, isLoading: false })
           return { success: false, message: errorMessage }
         }

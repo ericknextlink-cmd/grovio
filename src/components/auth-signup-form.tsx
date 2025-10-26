@@ -3,26 +3,17 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
-<<<<<<< Updated upstream
 import { useRouter } from "next/navigation"
-=======
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
->>>>>>> Stashed changes
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-<<<<<<< Updated upstream
-import { apiService, type SignupRequest } from "@/lib/api"
-import { useToast } from "@/hooks/use-toast"
-=======
 import { Eye, EyeOff } from "lucide-react"
 import { signupSchema, type SignupFormData } from "@/lib/validations"
 import { useAuthStore } from "@/stores/auth-store"
 import { useGoogleAuth } from "@/hooks/use-google-auth"
-import { useRouter } from "next/navigation"
->>>>>>> Stashed changes
 
 const countryCodes = [
   { code: "+233", country: "Ghana" },
@@ -32,81 +23,18 @@ const countryCodes = [
 ]
 
 export function SignupForm() {
-<<<<<<< Updated upstream
   const router = useRouter()
-  const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
-
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    countryCode: "+233",
-    phoneNumber: "",
-    password: "",
-  })
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-
-    try {
-      const signupData: SignupRequest = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phoneNumber: formData.countryCode + formData.phoneNumber,
-        countryCode: formData.countryCode,
-        password: formData.password,
-      }
-
-      const response = await apiService.signup(signupData)
-
-      if (response.success) {
-        toast({
-          title: "Account created successfully!",
-          description: "Welcome to Grovio! You can now sign in.",
-        })
-
-        // Store tokens if provided
-        if (response.accessToken && response.refreshToken) {
-          localStorage.setItem('accessToken', response.accessToken)
-          localStorage.setItem('refreshToken', response.refreshToken)
-        }
-
-        // Redirect to login page or dashboard
-        router.push('/login')
-      } else {
-        toast({
-          title: "Signup failed",
-          description: response.message || "Please check your information and try again.",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      console.error('Signup error:', error)
-      toast({
-        title: "Signup failed",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-=======
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [newsletter, setNewsletter] = useState(false)
   const [selectedCountryCode, setSelectedCountryCode] = useState("+233")
-  const { signup, isLoading, error, clearError } = useAuthStore()
+  const { signup, error, clearError } = useAuthStore()
   const { signInWithGoogle } = useGoogleAuth()
-  const router = useRouter()
 
   const {
     register,
     handleSubmit,
-    watch,
-    setValue,
     formState: { errors },
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
@@ -118,6 +46,9 @@ export function SignupForm() {
   }, [clearError])
 
   const onSubmit = async (data: SignupFormData) => {
+    setIsLoading(true)
+    
+    try {
     // Format phone number with country code
     const fullPhoneNumber = `${selectedCountryCode}${data.phoneNumber}`
     
@@ -128,6 +59,9 @@ export function SignupForm() {
     
     if (result.success) {
       router.push("/")
+      }
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -137,7 +71,6 @@ export function SignupForm() {
 
   const handleCountryCodeChange = (code: string) => {
     setSelectedCountryCode(code)
->>>>>>> Stashed changes
   }
 
   return (
@@ -159,17 +92,6 @@ export function SignupForm() {
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
-<<<<<<< Updated upstream
-          <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">First Name</Label>
-          <Input
-            id="firstName"
-            type="text"
-            value={formData.firstName}
-            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-            placeholder="First name"
-            className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E]"
-            required
-=======
           <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">
             First Name
           </Label>
@@ -180,7 +102,6 @@ export function SignupForm() {
             {...register("firstName")}
             className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E]"
             disabled={isLoading}
->>>>>>> Stashed changes
           />
           {errors.firstName && (
             <p className="text-sm text-red-600">{errors.firstName.message}</p>
@@ -188,17 +109,6 @@ export function SignupForm() {
         </div>
 
         <div className="space-y-2">
-<<<<<<< Updated upstream
-          <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">Last Name</Label>
-          <Input
-            id="lastName"
-            type="text"
-            value={formData.lastName}
-            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-            placeholder="Last name"
-            className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E]"
-            required
-=======
           <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">
             Last Name
           </Label>
@@ -209,7 +119,6 @@ export function SignupForm() {
             {...register("lastName")}
             className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E]"
             disabled={isLoading}
->>>>>>> Stashed changes
           />
           {errors.lastName && (
             <p className="text-sm text-red-600">{errors.lastName.message}</p>
@@ -217,17 +126,6 @@ export function SignupForm() {
         </div>
 
         <div className="space-y-2">
-<<<<<<< Updated upstream
-          <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email Address</Label>
-          <Input
-            id="email"
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            placeholder="you@example.com"
-            className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E]"
-            required
-=======
           <Label htmlFor="email" className="text-sm font-medium text-gray-700">
             Email Address
           </Label>
@@ -238,7 +136,6 @@ export function SignupForm() {
             {...register("email")}
             className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E]"
             disabled={isLoading}
->>>>>>> Stashed changes
           />
           {errors.email && (
             <p className="text-sm text-red-600">{errors.email.message}</p>
@@ -266,17 +163,6 @@ export function SignupForm() {
                 ))}
               </SelectContent>
             </Select>
-<<<<<<< Updated upstream
-            <Input
-              id="phone"
-              type="tel"
-              maxLength={10}
-              value={formData.phoneNumber}
-              onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value.replace(/\D/g, "") })}
-              placeholder="1234567890"
-              className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E]"
-              required
-=======
             <Input 
               id="phoneNumber" 
               type="tel" 
@@ -284,7 +170,6 @@ export function SignupForm() {
               {...register("phoneNumber")}
               className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E]"
               disabled={isLoading}
->>>>>>> Stashed changes
             />
           </div>
           {errors.phoneNumber && (
@@ -293,18 +178,6 @@ export function SignupForm() {
         </div>
 
         <div className="space-y-2">
-<<<<<<< Updated upstream
-          <Label htmlFor="password" className="text-sm font-medium text-gray-700">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            placeholder="Create a password"
-            className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E]"
-            required
-          />
-=======
           <Label htmlFor="password" className="text-sm font-medium text-gray-700">
             Password
           </Label>
@@ -364,7 +237,6 @@ export function SignupForm() {
           {errors.confirmPassword && (
             <p className="text-sm text-red-600">{errors.confirmPassword.message}</p>
           )}
->>>>>>> Stashed changes
         </div>
 
         <div className="flex items-start gap-4 mt-8 text-[12px] text-gray-600">
@@ -385,17 +257,10 @@ export function SignupForm() {
           By clicking Continue, you acknowledge you have read and agreed to our Terms of Use and Privacy Policy. Message and data rates may apply.
         </p>
 
-<<<<<<< Updated upstream
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="w-full rounded-full bg-[#D35F0E] hover:bg-[#D35F0E]/90 text-white font-medium py-8 text-2xl disabled:opacity-50"
-=======
         <Button 
           type="submit" 
           className="w-full rounded-full bg-[#D35F0E] hover:bg-[#D35F0E]/90 text-white font-medium py-8 text-2xl"
           disabled={isLoading}
->>>>>>> Stashed changes
         >
           {isLoading ? "Creating Account..." : "Create Account"}
         </Button>

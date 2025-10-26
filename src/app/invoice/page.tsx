@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation"
 import Invoice from "@/components/invoice"
+import Header from "@/components/header"
 
 export default function InvoicePage() {
   const searchParams = useSearchParams()
@@ -16,14 +17,17 @@ export default function InvoicePage() {
   const credits = parseFloat(searchParams.get("credits") || "0")
 
   return (
-    <Invoice
-      orderNumber={orderNumber}
-      customerName={customerName}
-      customerAddress={customerAddress}
-      customerPhone={customerPhone}
-      orderDate={orderDate}
-      discount={discount}
-      credits={credits}
-    />
+    <>
+      <Header />
+      <Invoice
+        orderNumber={orderNumber}
+        customerName={customerName}
+        customerAddress={customerAddress}
+        customerPhone={customerPhone}
+        orderDate={orderDate}
+        discount={discount}
+        credits={credits}
+      />
+    </>
   )
 }

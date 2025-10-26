@@ -19,6 +19,14 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "www.nestle-cwa.com",
       },
+      {
+        protocol: "https",
+        hostname: "dujis.nyc3.cdn.digitaloceanspaces.com",
+      },
+      {
+        protocol: "https",
+        hostname: "www.logo.wine",
+      },
     ],
   },
 };

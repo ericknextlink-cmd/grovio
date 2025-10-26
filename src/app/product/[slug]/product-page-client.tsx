@@ -46,7 +46,8 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header user={{ fullName: "", username: "" }} />
+      {/* <Header user={{ fullName: "", username: "" }} /> */}
+      <Header />
 
       <div className="container mx-auto px-4 py-8">
         {/* Breadcrumbs */}

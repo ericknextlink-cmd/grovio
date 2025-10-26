@@ -18,7 +18,8 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header user={{ fullName: "", username: "" }} />
+      {/* <Header user={{ fullName: "", username: "" }} /> */}
+      <Header />
       <div className="container mx-auto px-4 py-8">
         <ProductGrid products={products} title={title} />
       </div>

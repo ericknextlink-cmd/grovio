@@ -3,54 +3,7 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
-<<<<<<< Updated upstream
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useAuth } from "@/contexts/AuthContext"
-import { useToast } from "@/hooks/use-toast"
-
-export function LoginForm() {
-  const router = useRouter()
-  const { toast } = useToast()
-  const { login } = useAuth()
-  const [isLoading, setIsLoading] = useState(false)
-
-  const [formData, setFormData] = useState({ emailOrUsername: "", password: "" })
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-
-    try {
-      const response = await login(formData.emailOrUsername, formData.password)
-
-      if (response.success) {
-        toast({
-          title: "Welcome back!",
-          description: "You have successfully signed in.",
-        })
-
-        // Redirect to dashboard or home page
-        router.push('/')
-      } else {
-        toast({
-          title: "Sign in failed",
-          description: response.message || "Please check your credentials and try again.",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      console.error('Signin error:', error)
-      toast({
-        title: "Sign in failed",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-=======
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
@@ -60,13 +13,12 @@ import { Eye, EyeOff } from "lucide-react"
 import { signinSchema, type SigninFormData } from "@/lib/validations"
 import { useAuthStore } from "@/stores/auth-store"
 import { useGoogleAuth } from "@/hooks/use-google-auth"
-import { useRouter } from "next/navigation"
 
 export function LoginForm() {
+  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const { signin, isLoading, error, clearError } = useAuthStore()
   const { signInWithGoogle } = useGoogleAuth()
-  const router = useRouter()
 
   const {
     register,
@@ -85,17 +37,11 @@ export function LoginForm() {
     const result = await signin(data)
     if (result.success) {
       router.push("/")
->>>>>>> Stashed changes
     }
   }
 
   const handleGoogleLogin = async () => {
-<<<<<<< Updated upstream
-    // TODO: Implement Google OAuth flow
-    console.log("Google login")
-=======
     await signInWithGoogle()
->>>>>>> Stashed changes
   }
 
   return (
@@ -117,17 +63,6 @@ export function LoginForm() {
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
-<<<<<<< Updated upstream
-          <Label htmlFor="emailOrUsername" className="text-sm font-medium text-gray-700">Email Address or Mobile Number</Label>
-          <Input
-            id="emailOrUsername"
-            type="text"
-            placeholder="e.g. you@example.com"
-            value={formData.emailOrUsername}
-            onChange={(e) => setFormData({ ...formData, emailOrUsername: e.target.value })}
-            className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E] text-black"
-            required
-=======
           <Label htmlFor="email" className="text-sm font-medium text-gray-700">
             Email Address
           </Label>
@@ -138,7 +73,6 @@ export function LoginForm() {
             {...register("email")}
             className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E]"
             disabled={isLoading}
->>>>>>> Stashed changes
           />
           {errors.email && (
             <p className="text-sm text-red-600">{errors.email.message}</p>
@@ -146,23 +80,6 @@ export function LoginForm() {
         </div>
 
         <div className="space-y-2">
-<<<<<<< Updated upstream
-          <Label htmlFor="password" className="text-sm font-medium text-gray-700">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            placeholder="Enter your password"
-            value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E] text-black"
-            required
-          />
-        </div>
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="w-full rounded-full bg-[#D35F0E] hover:bg-[#D35F0E]/90 text-white font-medium py-8 text-2xl mt-6 disabled:opacity-50"
-=======
           <Label htmlFor="password" className="text-sm font-medium text-gray-700">
             Password
           </Label>
@@ -197,7 +114,6 @@ export function LoginForm() {
           type="submit" 
           className="w-full rounded-full bg-[#D35F0E] hover:bg-[#D35F0E]/90 text-white font-medium py-8 text-2xl mt-6"
           disabled={isLoading}
->>>>>>> Stashed changes
         >
           {isLoading ? "Signing in..." : "Sign in"}
         </Button>

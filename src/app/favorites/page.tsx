@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import { useFavorites } from "@/contexts/favorites-context"
@@ -5,7 +6,7 @@ import { useCart } from "@/contexts/cart-context"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Heart, ShoppingCart, Trash2, Star } from "lucide-react"
 import { sampleProducts } from "@/lib/data"
 

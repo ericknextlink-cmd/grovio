@@ -225,7 +225,7 @@ export const sampleProducts: Product[] = [
     name: "Ideal Milk",
     description: "Premium quality milk for the whole family",
     price: 25.0,
-    images: ["https://www.nestle-cwa.com/sites/g/files/pydnoa346/files/asset-library/publishingimages/brands/ideal%20milk%20original%20copy.jpg"],
+    images: ["https://dujis.nyc3.cdn.digitaloceanspaces.com/shop/3428/conversions/ideal-milk-large-square_jpg.jpg"],
     category: "dairy",
     subcategory: "Milk",
     brand: "Ideal",

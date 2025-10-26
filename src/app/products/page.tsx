@@ -5,7 +5,8 @@ import { sampleProducts } from "@/lib/data"
 export default function ProductsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header user={{ fullName: "", username: "" }} />
+      {/* <Header user={{ fullName: "", username: "" }} /> */}
+      <Header />
       <main className="container mx-auto px-4 py-8">
         <ProductGrid products={sampleProducts} title="All Products" />
       </main>

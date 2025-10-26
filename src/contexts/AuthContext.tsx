@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { apiService, type ApiResponse } from '@/lib/api'
 
 interface User {
@@ -40,6 +40,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isAuthenticated = !!user
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const response = await apiService.getProfile()
+
+      if (response.success && response.user) {
+        setUser(response.user)
+      } else {
+        // Token might be invalid, clear auth state
+        logout()
+      }
+    } catch (error) {
+      console.error('Refresh user error:', error)
+      logout()
+    }
+  }, [])
+
+
   // Check for existing tokens on mount
   useEffect(() => {
     const checkAuth = async () => {
@@ -57,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     checkAuth()
-  }, [])
+  }, [refreshUser])
 
   const login = async (email: string, password: string): Promise<ApiResponse> => {
     try {
@@ -89,21 +106,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
   }
 
-  const refreshUser = async () => {
-    try {
-      const response = await apiService.getProfile()
-
-      if (response.success && response.user) {
-        setUser(response.user)
-      } else {
-        // Token might be invalid, clear auth state
-        logout()
-      }
-    } catch (error) {
-      console.error('Refresh user error:', error)
-      logout()
-    }
-  }
 
   const refreshToken = async (): Promise<boolean> => {
     try {

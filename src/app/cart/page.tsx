@@ -4,7 +4,7 @@ import { useCart } from "@/contexts/cart-context"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Minus, Plus, Trash2, Heart, Star } from "lucide-react"
 import { sampleProducts } from "@/lib/data"
 
@@ -42,7 +42,7 @@ export default function CartPage() {
             />
           </div>
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Your cart is empty</h2>
-          <p className="text-gray-600 mb-8">Looks like you haven't added any items to your cart yet.</p>
+          <p className="text-gray-600 mb-8">{`Looks like you haven't added any items to your cart yet.`}</p>
           <Link href="/products">
             <Button className="bg-[#D35F0E] hover:bg-[#D35F0E]/90 text-white px-8 py-3 text-lg rounded-full">
               Start Shopping

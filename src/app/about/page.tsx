@@ -5,7 +5,8 @@ import Link from "next/link"
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header user={{ fullName: "", username: "" }} />
+      {/* <Header user={{ fullName: "", username: "" }} /> */}
+      <Header />
       <main className="container mx-auto px-4 py-12">
         {/* Hero */}
         <section className="grid md:grid-cols-2 gap-10 items-center mb-16">

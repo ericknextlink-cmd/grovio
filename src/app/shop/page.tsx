@@ -13,7 +13,8 @@ import { shopBundles } from "@/lib/shop-data"
 export default function ShopPage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header user={{ fullName: "", username: "" }} />
+      {/* <Header user={{ fullName: "", username: "" }} /> */}
+      <Header />
       <main className="container mx-auto px-4 py-8">
         {/* Hero Section */}
         <section className="text-center mb-12">

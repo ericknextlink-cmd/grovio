@@ -1,67 +1,105 @@
 import { useCallback } from 'react'
-import { useAuthStore } from '@/stores/auth-store'
-
-declare global {
-  interface Window {
-    google: any
-  }
-}
+import { useRouter } from 'next/navigation'
 
 export const useGoogleAuth = () => {
-  const { signinWithGoogle, isLoading } = useAuthStore()
+  const router = useRouter()
 
-  const initializeGoogle = useCallback(() => {
-    if (typeof window === 'undefined' || window.google) return
-
-    const script = document.createElement('script')
-    script.src = 'https://accounts.google.com/gsi/client'
-    script.async = true
-    script.defer = true
-    document.head.appendChild(script)
-
-    return new Promise<void>((resolve) => {
-      script.onload = () => {
-        if (window.google) {
-          // Initialize Google Identity Services
-          window.google.accounts.id.initialize({
-            // We don't need client_id here since the backend handles the OAuth flow
-            callback: handleGoogleResponse,
-          })
-          resolve()
-        }
-      }
-    })
-  }, [])
-
-  const handleGoogleResponse = useCallback(async (response: any) => {
-    try {
-      const { credential } = response
-      // Send the Google ID token to our backend
-      await signinWithGoogle(credential)
-    } catch (error) {
-      console.error('Google signin error:', error)
-    }
-  }, [signinWithGoogle])
+  const openCenteredPopup = (url: string, title: string, w: number, h: number) => {
+    const dualScreenLeft = window.screenLeft !== undefined ? window.screenLeft : window.screenX
+    const dualScreenTop = window.screenTop !== undefined ? window.screenTop : window.screenY
+    const width = window.innerWidth || document.documentElement.clientWidth || screen.width
+    const height = window.innerHeight || document.documentElement.clientHeight || screen.height
+    const systemZoom = width / window.screen.availWidth
+    const left = (width - w) / 2 / systemZoom + dualScreenLeft
+    const top = (height - h) / 2 / systemZoom + dualScreenTop
+    const features = `scrollbars=yes, width=${w / systemZoom}, height=${h / systemZoom}, top=${top}, left=${left}`
+    return window.open(url, title, features)
+  }
 
   const signInWithGoogle = useCallback(async () => {
     try {
-      await initializeGoogle()
+      // Backend URL - this is the Express server, not Next.js frontend
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
       
-      if (window.google) {
-        // Trigger Google Sign-In popup
-        window.google.accounts.id.prompt((notification: any) => {
-          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            console.log('Google signin popup was not displayed')
-          }
-        })
+      console.log('Requesting Google OAuth URL from backend:', backendUrl)
+
+      // Step 1: Request OAuth URL from backend
+      const response = await fetch(`${backendUrl}/api/auth/google`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`Backend responded with status: ${response.status}`)
       }
+
+      const data = await response.json()
+      console.log('Backend response:', data)
+      
+      if (!data.success || !data.url) {
+        throw new Error(data.message || 'Failed to get Google OAuth URL')
+      }
+
+      // Step 2: Open Google OAuth in popup
+      // The backend will handle the callback and redirect back to frontend
+      const popup = openCenteredPopup(data.url, 'Sign in with Google', 500, 600)
+
+      if (!popup) {
+        alert('Popup blocked. Please allow popups for Google sign-in.')
+        return
+      }
+
+      // Step 3: Listen for the OAuth callback
+      // Backend redirects to: FRONTEND_URL/auth/callback?access_token=...&refresh_token=...
+      const handleMessage = (event: MessageEvent) => {
+        // Security: Only accept messages from our backend origin
+        const backendOrigin = new URL(backendUrl).origin
+        if (event.origin !== backendOrigin && event.origin !== window.location.origin) {
+          return
+        }
+
+        if (event.data?.type === 'google-auth-success') {
+          popup.close()
+          window.removeEventListener('message', handleMessage)
+          
+          // Store tokens if provided
+          if (event.data.accessToken) {
+            localStorage.setItem('accessToken', event.data.accessToken)
+          }
+          if (event.data.refreshToken) {
+            localStorage.setItem('refreshToken', event.data.refreshToken)
+          }
+          
+          // Redirect to home or dashboard
+          router.push('/')
+          window.location.reload() // Refresh to update auth state
+        } else if (event.data?.type === 'google-auth-error') {
+          popup.close()
+          window.removeEventListener('message', handleMessage)
+          alert('Google sign-in failed: ' + (event.data.error || 'Unknown error'))
+        }
+      }
+
+      window.addEventListener('message', handleMessage)
+
+      // Cleanup if popup is closed manually
+      const checkPopupClosed = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(checkPopupClosed)
+          window.removeEventListener('message', handleMessage)
+        }
+      }, 1000)
+
     } catch (error) {
-      console.error('Failed to initialize Google signin:', error)
+      console.error('Google sign-in error:', error)
+      alert('Failed to initiate Google sign-in. Please make sure the backend is running.')
     }
-  }, [initializeGoogle])
+  }, [router])
 
   return {
     signInWithGoogle,
-    isLoading,
+    isLoading: false,
   }
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import { useEffect, useRef, useState } from "react"
@@ -122,7 +123,7 @@ export default function ChatbotWidget() {
 
       {/* Chat Widget */}
       {isOpen && (
-        <Card className="fixed bottom-6 right-6 md:right-6 left-4 md:left-auto w-[calc(100vw-2rem)] md:w-[520px] h-[500px] md:h-[600px] z-50 shadow-xl overflow-hidden">
+        <Card className="fixed bottom-6 right-6 md:right-6 left-4 md:left-auto w-[calc(100vw-2rem)] md:w-[480px] lg:w-[480px] h-[500px] md:h-[600px] z-50 lg:z-50 md:z-50 shadow-xl overflow-hidden scale-[0.95] lg:scale-[1.0] md:scale-[1.0]">
           <CardHeader className="bg-grovio-navy text-white p-4 rounded-t-lg -mt-6">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">Grovio Assistant</CardTitle>

@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // API configuration and base URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 // API response types
 export interface ApiResponse<T = any> {
@@ -29,9 +30,7 @@ export interface SigninRequest {
 
 export interface GoogleAuthRequest {
   idToken: string
-  email: string
-  firstName: string
-  lastName: string
+  nonce?: string
 }
 
 // Auth response types

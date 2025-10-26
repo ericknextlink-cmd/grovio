@@ -1,9 +1,4 @@
-<<<<<<< Updated upstream
-import { ProfilePageClient } from './profile-page-client'
-
-export default function ProfilePage() {
-  return <ProfilePageClient />
-=======
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
 import { useState } from "react"
@@ -131,7 +126,7 @@ export default function ProfilePage() {
     <div className="space-y-6">
       {/* Account Name and Email */}
       <Card>
-        <CardHeader className="bg-gradient-to-r from-orange-100 to-orange-50">
+        <CardHeader className="bg-linear-to-r from-orange-100 to-orange-50">
           <div className="flex justify-between items-center">
             <CardTitle className="text-lg">Account Name</CardTitle>
             <CardTitle className="text-lg">Email Address</CardTitle>
@@ -158,7 +153,7 @@ export default function ProfilePage() {
 
       {/* Address */}
       <Card>
-        <CardHeader className="bg-gradient-to-r from-orange-100 to-orange-50">
+        <CardHeader className="bg-linear-to-r from-orange-100 to-orange-50">
           <div className="flex justify-between items-center">
             <CardTitle className="text-lg">Address</CardTitle>
             <Button
@@ -213,7 +208,7 @@ export default function ProfilePage() {
 
       {/* Newsletters */}
       <Card>
-        <CardHeader className="bg-gradient-to-r from-orange-100 to-orange-50">
+        <CardHeader className="bg-linear-to-r from-orange-100 to-orange-50">
           <CardTitle className="text-lg">Newsletters</CardTitle>
         </CardHeader>
         <CardContent className="p-6">
@@ -228,7 +223,7 @@ export default function ProfilePage() {
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="dont-send" id="dont-send" />
-              <Label htmlFor="dont-send">Don't send me newsletters</Label>
+              <Label htmlFor="dont-send">{`Don't send me newsletters`}</Label>
             </div>
           </RadioGroup>
         </CardContent>
@@ -395,7 +390,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header user={{ fullName: user.name, username: user.email }} />
+      <Header />
       
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -448,5 +443,4 @@ export default function ProfilePage() {
       </div>
     </div>
   )
->>>>>>> Stashed changes
 }

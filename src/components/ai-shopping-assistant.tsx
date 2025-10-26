@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
 import { useState, useEffect } from "react"
@@ -132,8 +133,8 @@ export function AIShoppingAssistant({ onClose, aiResponse, cartData }: AIShoppin
   const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0)
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full -ml-52 mt-20 max-w-xl h-[80vh] flex flex-col relative">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 ">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl h-[50vh] lg:h-[90vh] md:h-[90vh] flex flex-col relative overflow-hidden -mt-[520px] lg:mt-6 md:mt-4 scale-[0.9] lg:scale-[0.9] md:scale-[0.8] -left-3 lg:-left-30 md:-left-60 w-[100%] lg:w-[80%] md:w-[54%]">
         {/* Close Button */}
         <Button
           variant="ghost"
@@ -145,17 +146,20 @@ export function AIShoppingAssistant({ onClose, aiResponse, cartData }: AIShoppin
         </Button>
 
         {/* Header */}
-        <div className="border-b border-gray-200 p-4">
+        <div className="border-b border-gray-200 p-4 flex-shrink-0">
           <h2 className="text-xl font-semibold text-gray-800">
             AI Shopping Assistant Suggestions
           </h2>
           {cartData?.rationale && (
-            <p className="text-sm text-gray-600 mt-1">{cartData.rationale}</p>
+            <div className="text-gray-600 md:-left-[60px] scale-[0.9] lg:scale-[0.9] md:scale-[0.9] -ml-6 lg:-ml-8 md:-ml-8">
+              Reason:
+              <p className="text-sm lg:text-[14px] md:text-[12px] text-gray-600 mt-1">{cartData.rationale}</p>
+            </div>
           )}
         </div>
         
         {/* Scrollable Items List */}
-        <ScrollArea className="flex-1 p-4">
+        <div className="flex-1 overflow-y-auto p-4">
           <div className="space-y-4">
             {cartItems.map((item) => (
               <div key={item.id} className="flex items-center space-x-4 p-3 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
@@ -239,11 +243,11 @@ export function AIShoppingAssistant({ onClose, aiResponse, cartData }: AIShoppin
               </div>
             )}
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Bottom Section - Static */}
         {cartItems.length > 0 && (
-          <div className="border-t rounded-b-lg border-gray-200 p-4 space-y-4 bg-white">
+          <div className="border-t border-gray-200 p-4 space-y-4 bg-white flex-shrink-0">
             {cartData?.totalSavings && cartData.totalSavings > 0 && (
               <div className="text-center">
                 <p className="text-sm text-green-600 font-medium">
@@ -252,15 +256,15 @@ export function AIShoppingAssistant({ onClose, aiResponse, cartData }: AIShoppin
               </div>
             )}
             
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center gap-4 scale-[0.9] lg:scale-[0.9] md:scale-[0.9]">
               <Button 
-                className="w-[30%] bg-[#D35F0E] hover:bg-[#D35F0E]/90 text-white font-medium py-3 text-lg rounded-full"
+                className="flex-1 bg-[#D35F0E] hover:bg-[#D35F0E]/90 text-white font-medium py-4 text-lg rounded-full relative -left-[70px] lg:-left-[180px] md:-left-[160px] ml-12 lg:ml-42 md:ml-32"
                 onClick={addAllToCart}
               >
                 Add All to Cart
               </Button>
-                <span className="text-lg font-semibold text-gray-800">
-                  Subtotal ({totalItems} items): GH₵ {subtotal.toFixed(2)}
+                <span className="text-lg font-semibold text-gray-800 whitespace-nowrap relative -left-[50px] lg:-left-[80px] md:-left-[60px]">
+                  Subtotal ({totalItems}): GH₵ {subtotal.toFixed(2)}
                 </span>
             </div>
           </div>

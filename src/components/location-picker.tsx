@@ -1,10 +1,41 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-namespace */
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { MapPin, Search, X } from "lucide-react"
+
+// Google Maps types
+declare global {
+  interface Window {
+    google: typeof google
+  }
+}
+
+declare namespace google {
+  namespace maps {
+    namespace places {
+      class AutocompleteService {
+        getPlacePredictions(
+          request: any,
+          callback: (predictions: any, status: any) => void
+        ): void
+      }
+      
+      class PlacesService {
+        constructor(attrContainer: HTMLDivElement)
+        getDetails(request: any, callback: (place: any, status: any) => void): void
+      }
+      
+      enum PlacesServiceStatus {
+        OK = 'OK'
+      }
+    }
+  }
+}
 
 interface LocationPickerProps {
   selectedLocation: string
@@ -29,9 +60,9 @@ export default function LocationPicker({ selectedLocation, onLocationSelect }: L
   const [searchResults, setSearchResults] = useState<PlaceResult[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const searchTimeoutRef = useRef<NodeJS.Timeout>()
-  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService>()
-  const placesServiceRef = useRef<google.maps.places.PlacesService>()
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null)
+  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null)
 
   // Initialize Google Places API
   useEffect(() => {
@@ -43,7 +74,7 @@ export default function LocationPicker({ selectedLocation, onLocationSelect }: L
   }, [])
 
   // Default Accra locations
-  const defaultAccraLocations = [
+  const defaultAccraLocations = useMemo(() => [
     "Accra Central, Accra, Ghana",
     "East Legon, Accra, Ghana", 
     "Osu, Accra, Ghana",
@@ -51,7 +82,7 @@ export default function LocationPicker({ selectedLocation, onLocationSelect }: L
     "Cantonments, Accra, Ghana",
     "Airport Residential, Accra, Ghana",
     "Tema, Greater Accra, Ghana"
-  ]
+  ], [])
 
   // Load default locations on mount
   useEffect(() => {
@@ -68,7 +99,7 @@ export default function LocationPicker({ selectedLocation, onLocationSelect }: L
         }
       })))
     }
-  }, [searchQuery, searchResults.length])
+  }, [searchQuery, searchResults.length, defaultAccraLocations])
 
   // Handle search with debouncing
   const handleSearch = (query: string) => {
@@ -126,7 +157,7 @@ export default function LocationPicker({ selectedLocation, onLocationSelect }: L
           const detailedResults: PlaceResult[] = []
           let processedCount = 0
 
-          predictions.slice(0, 7).forEach((prediction) => {
+          predictions.slice(0, 7).forEach((prediction: any) => {
             if (placesServiceRef.current) {
               placesServiceRef.current.getDetails(
                 {
@@ -246,7 +277,7 @@ export default function LocationPicker({ selectedLocation, onLocationSelect }: L
                         className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
                       >
                         <div className="flex items-start gap-3">
-                          <MapPin className="h-4 w-4 text-[#D35F0E] mt-0.5 flex-shrink-0" />
+                          <MapPin className="h-4 w-4 text-[#D35F0E] mt-0.5 shrink-0" />
                           <div>
                             <p className="font-medium text-gray-900">{location.name}</p>
                             <p className="text-sm text-gray-600">{location.formatted_address}</p>

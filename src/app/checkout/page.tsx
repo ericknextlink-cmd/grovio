@@ -1,3 +1,4 @@
+/* eslint-disable  @typescript-eslint/no-unused-vars */
 "use client"
 
 import { useState } from "react"
@@ -8,15 +9,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { MapPin, Clock, Wallet, CreditCard, Smartphone, Building } from "lucide-react"
 import { useCart } from "@/contexts/cart-context"
+import { useAuthStore } from "@/stores/auth-store"
 import LocationPicker from "@/components/location-picker"
 
 export default function CheckoutPage() {
   const { items, getTotalPrice, getTotalItems } = useCart()
+  const { user } = useAuthStore()
   const [selectedLocation, setSelectedLocation] = useState("")
   const [deliveryDate, setDeliveryDate] = useState("16 September")
   const [paymentMethod, setPaymentMethod] = useState("mobile-money")
+  const [mobileMoneyProvider, setMobileMoneyProvider] = useState("mtn")
   const [mobileNumber, setMobileNumber] = useState("")
   const [discountCode, setDiscountCode] = useState("")
 
@@ -34,9 +39,9 @@ export default function CheckoutPage() {
     // Redirect to invoice with order details
     const params = new URLSearchParams({
       order: orderNumber,
-      name: "William Duncan Bills", // In real app, get from user profile
+      name: user ? `${user.firstName} ${user.lastName}` : "Guest User",
       address: selectedLocation || "Adjuma Crescent Road\nSouth Industrial Area\nAccra, Ghana",
-      phone: "00233265713324", // In real app, get from user profile
+      phone: user?.phoneNumber || "No phone number",
       date: new Date().toLocaleDateString("en-GB"),
       discount: discountCode ? "200" : "0",
       credits: "0"
@@ -67,9 +72,7 @@ export default function CheckoutPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-[#D35F0E] rounded-full flex items-center justify-center">
-              <div className="w-3 h-3 bg-white rounded-full"></div>
-            </div>
+            <Image src="/logo.png" alt="Grovio" width={32} height={32} className="w-8 h-8" />
             <span className="text-xl font-bold text-gray-800">Grovio</span>
           </div>
           <span className="text-lg font-semibold text-gray-600">Secure checkout</span>
@@ -92,7 +95,9 @@ export default function CheckoutPage() {
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Delivering to</p>
-                    <p className="font-medium">ERIC BOAHEN</p>
+                    <p className="font-medium">
+                      {user ? `${user.firstName} ${user.lastName}`.toUpperCase() : "GUEST USER"}
+                    </p>
                   </div>
                   
                   <LocationPicker 
@@ -101,7 +106,7 @@ export default function CheckoutPage() {
                   />
                   
                   <div className="text-sm text-gray-600">
-                    <p>Contact: 0265713327</p>
+                    <p>Contact: {user?.phoneNumber || "No phone number"}</p>
                   </div>
                 </div>
               </CardContent>
@@ -156,10 +161,34 @@ export default function CheckoutPage() {
                     </div>
                     {paymentMethod === "mobile-money" && (
                       <div className="ml-6 space-y-3">
-                        <Button className="bg-yellow-500 hover:bg-yellow-600 text-white flex items-center gap-2">
-                          <Image src="/mtn-logo.png" alt="MTN" width={20} height={20} />
-                          MTN Mobile Money
-                        </Button>
+                        <div className="space-y-2">
+                          <Label htmlFor="mobile-provider">Select Mobile Money Provider</Label>
+                          <Select value={mobileMoneyProvider} onValueChange={setMobileMoneyProvider}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select provider" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="mtn">
+                                <div className="flex items-center gap-2">
+                                  <Image src="https://www.logo.wine/a/logo/MTN_Group/MTN_Group-Logo.wine.svg" alt="MTN" width={20} height={20} className="w-4 h-4" />
+                                  MTN Mobile Money
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="telecel">
+                                <div className="flex items-center gap-2">
+                                  <Image src="https://www.gsma.com/get-involved/gsma-membership/wp-content/uploads/2014/06/Telecel-LOGO-RED-PNG.png" alt="Telecel" width={20} height={20} className="w-4 h-4" />
+                                  Telecel Cash
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="airtel-tigo">
+                                <div className="flex items-center gap-2">
+                                  <Image src="https://static.wikia.nocookie.net/logopedia/images/7/7b/ATGhana.png/" alt="AirtelTigo" width={20} height={20} className="w-4 h-4" />
+                                  AirtelTigo Cash
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                         <Input 
                           placeholder="Enter Mobile Number Here"
                           value={mobileNumber}
@@ -201,7 +230,7 @@ export default function CheckoutPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span>Item's total ({getTotalItems()})</span>
+                    <span>{`Item's total (${getTotalItems()})`}</span>
                     <span>GH₵ {itemsTotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">

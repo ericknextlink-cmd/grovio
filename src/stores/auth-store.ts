@@ -47,6 +47,8 @@ interface AuthState {
 
   refreshUser: () => Promise<void>
 
+  initializeAuth: () => Promise<void>
+
   clearError: () => void
 
   setLoading: (loading: boolean) => void
@@ -66,8 +68,10 @@ export const useAuthStore = create<AuthState>()(
           const response = await api.auth.signup(data)
           const { success, message, user } = response.data
 
-          if (success && user) {
-            set({ user, isAuthenticated: true, isLoading: false })
+          if (success) {
+            // Don't set user as authenticated yet - email verification is required
+            // User will be authenticated after they verify their email via the callback page
+            set({ isLoading: false })
             return { success: true, message }
           } else {
             set({ error: message, isLoading: false })
@@ -156,7 +160,12 @@ export const useAuthStore = create<AuthState>()(
       },
 
       refreshUser: async () => {
-        if (!tokenManager.isAuthenticated()) return
+        // Check if we have tokens
+        const hasToken = tokenManager.isAuthenticated()
+        if (!hasToken) {
+          set({ user: null, isAuthenticated: false, isLoading: false })
+          return
+        }
 
         set({ isLoading: true })
         try {
@@ -166,11 +175,51 @@ export const useAuthStore = create<AuthState>()(
           if (success && user) {
             set({ user, isAuthenticated: true, isLoading: false })
           } else {
+            // Token might be invalid, clear it
+            tokenManager.clearTokens()
             set({ user: null, isAuthenticated: false, isLoading: false })
           }
-        } catch (error) {
-          console.error('Refresh user error:', error)
+        } catch (error: any) {
+          // Check if it's "User not found" - this is expected for newly verified users
+          const errorMessage = error?.response?.data?.message || ''
+          const isUserNotFound = errorMessage.includes('User not found') || 
+                                errorMessage.includes('User profile not found')
+          const is401 = error?.response?.status === 401
+          
+          // For "User not found" - this is expected for new users, keep tokens
+          if (isUserNotFound) {
+            console.log('User profile not found (expected for new users)')
+            set({ user: null, isAuthenticated: false, isLoading: false })
+            // Don't throw - this is expected and not an error
+            return
+          }
+          
+          // For other 401 errors, check if token might be invalid
+          if (is401) {
+            // Don't clear tokens automatically - let the caller decide
+            // Token might be valid but profile doesn't exist yet
+            console.warn('401 error fetching user profile (non-critical)')
+            set({ user: null, isAuthenticated: false, isLoading: false })
+            // Don't throw - allow caller to handle gracefully
+            return
+          }
+          
+          // For other errors, log and set state but don't throw
+          console.warn('Failed to refresh user (non-critical):', errorMessage || error.message)
           set({ user: null, isAuthenticated: false, isLoading: false })
+          // Don't throw - allow flow to continue
+        }
+      },
+
+      // Initialize auth state from tokens on mount
+      initializeAuth: async () => {
+        const hasToken = tokenManager.isAuthenticated()
+        if (hasToken && !get().user) {
+          // User has token but profile not loaded, fetch it
+          await get().refreshUser()
+        } else if (!hasToken) {
+          // No token, clear auth state
+          set({ user: null, isAuthenticated: false })
         }
       },
 

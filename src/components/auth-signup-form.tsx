@@ -14,6 +14,7 @@ import { Eye, EyeOff } from "lucide-react"
 import { signupSchema, type SignupFormData } from "@/lib/validations"
 import { useAuthStore } from "@/stores/auth-store"
 import { useGoogleAuth } from "@/hooks/use-google-auth"
+import { toast } from "sonner"
 
 const countryCodes = [
   { code: "+233", country: "Ghana" },
@@ -58,7 +59,13 @@ export function SignupForm() {
     })
     
     if (result.success) {
-      router.push("/")
+      // Show success message and redirect to login
+      // User needs to confirm email before accessing the app
+      toast.success("Account created successfully!", {
+        description: "Please check your email to confirm your account before signing in.",
+        duration: 6000,
+      })
+      router.push("/login")
       }
     } finally {
       setIsLoading(false)
@@ -243,7 +250,7 @@ export function SignupForm() {
           <input 
             id="newsletter" 
             type="checkbox" 
-            className="mt-1" 
+            className="mt-1 scale-[1.2]" 
             checked={newsletter}
             onChange={(e) => setNewsletter(e.target.checked)}
             disabled={isLoading}

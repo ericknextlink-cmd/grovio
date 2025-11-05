@@ -95,7 +95,7 @@ export default function CartPage() {
                           className="flex items-center gap-1 text-red-500 hover:text-red-700"
                           onClick={() => removeFromCart(item.id)}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Image src="/trash-orange.png" alt="Trash" width={20} height={20} />
                           Remove
                         </button>
                       </div>

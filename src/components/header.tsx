@@ -6,25 +6,25 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Heart, ShoppingCart, User, Search, Menu, X } from "lucide-react"
-import { useAuth } from "@/contexts/AuthContext"
 import { useCart } from "@/contexts/cart-context"
 import { useFavorites } from "@/contexts/favorites-context"
 import { useAuthStore } from "@/stores/auth-store"
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const { user, logout } = useAuth()
   const { getUniqueItemCount } = useCart()
   const { getFavoritesCount } = useFavorites()
-  const { user: authUser, isAuthenticated, signout } = useAuthStore()
+  const { user, isAuthenticated, signout } = useAuthStore()
   const cartItemCount = getUniqueItemCount()
   const favoritesCount = getFavoritesCount()
-  
-  // Use auth user if available, otherwise fall back to prop
-  const currentUser = authUser || user
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
+  }
+
+  const handleLogout = async () => {
+    await signout()
+    setIsMobileMenuOpen(false)
   }
 
   return (
@@ -61,25 +61,25 @@ export default function Header() {
 
           {/* Mobile Layout - Username in center, icons on right */}
           <div className="lg:hidden flex items-center justify-center flex-1">
-            {isAuthenticated && (
+            {isAuthenticated && user && (
               <span className="text-white text-sm font-medium">
-                Welcome, {currentUser?.firstName || currentUser?.lastName || 'User'}
+                Welcome, {user.firstName || user.lastName || 'User'}
               </span>
             )}
           </div>
 
           {/* Desktop Action Buttons - Hidden on mobile */}
           <div className="hidden lg:flex items-center space-x-3">
-            {isAuthenticated ? (
+            {isAuthenticated && user ? (
               <>
                 <Link href="/profile">
                   <Button variant="outline" className="border-white text-white hover:bg-white hover:text-[#181725] px-4 py-2 text-sm rounded-full bg-transparent">
-                    {user?.firstName} {user?.lastName}
+                    {user.firstName} {user.lastName}
                     <Image src="/profile.png" alt="Profile" width={24} height={24} className="w-4 h-4" />
                   </Button>
                 </Link>
                 <Button
-                  onClick={logout}
+                  onClick={handleLogout}
                   variant="outline"
                   className="border-white text-white hover:bg-white hover:text-[#181725] px-4 py-2 text-sm rounded-full bg-transparent"
                 >
@@ -227,8 +227,11 @@ export default function Header() {
                 Contacts
               </Link>
               <div className="flex flex-col space-y-2 pt-2 border-t border-white/20">
-                {isAuthenticated ? (
+                {isAuthenticated && user ? (
                   <>
+                    <span className="text-white text-sm py-2">
+                      Welcome, {user.firstName} {user.lastName}
+                    </span>
                     <Link
                       href="/profile"
                       className="text-white hover:text-[#D35F0E] font-medium transition-colors py-2"
@@ -236,23 +239,8 @@ export default function Header() {
                     >
                       Profile
                     </Link>
-                    <button
-                      onClick={() => {
-                        logout()
-                        setIsMobileMenuOpen(false)
-                      }}
-                      className="text-white hover:text-[#D35F0E] font-medium transition-colors py-2 text-left"
-                    >
-                      Logout
-                    </button>
-                    <span className="text-white text-sm py-2">
-                      Welcome, {currentUser?.firstName || currentUser?.lastName || 'User'}
-                    </span>
                     <button 
-                      onClick={() => {
-                        signout()
-                        setIsMobileMenuOpen(false)
-                      }}
+                      onClick={handleLogout}
                       className="text-white hover:text-[#D35F0E] font-medium transition-colors py-2 text-left"
                     >
                       Logout
@@ -262,13 +250,6 @@ export default function Header() {
                   <>
                     <Link
                       href="/login"
-                      className="text-white hover:text-[#D35F0E] font-medium transition-colors py-2"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      Login
-                    </Link>
-                    <Link 
-                      href="/login" 
                       className="text-white hover:text-[#D35F0E] font-medium transition-colors py-2"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >

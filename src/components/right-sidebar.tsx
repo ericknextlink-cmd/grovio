@@ -17,7 +17,7 @@ export default function RightSidebar() {
             <Card key={product.id} className="group hover:shadow-lg transition-all duration-300 bg-white border border-gray-200">
               <CardContent className="p-3">
                 <div className="flex gap-3">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden shrink-0">
                     <Image
                       src={product.images[0]}
                       alt={product.name}
@@ -45,7 +45,7 @@ export default function RightSidebar() {
             <Card key={product.id} className="group hover:shadow-lg transition-all duration-300 bg-white border border-gray-200">
               <CardContent className="p-3">
                 <div className="flex gap-3">
-                  <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                  <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden shrink-0">
                     <Image
                       src={product.images[0]}
                       alt={product.name}

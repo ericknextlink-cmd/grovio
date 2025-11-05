@@ -3,31 +3,67 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import { env } from './env'
 
-// Token management
+// Token management with localStorage sync
 class TokenManager {
   private accessToken: string | null = null
   private refreshToken: string | null = null
 
+  constructor() {
+    // Initialize from localStorage if available
+    if (typeof window !== 'undefined') {
+      this.accessToken = localStorage.getItem('accessToken')
+      this.refreshToken = localStorage.getItem('refreshToken')
+    }
+  }
+
   setTokens(accessToken: string, refreshToken: string) {
     this.accessToken = accessToken
     this.refreshToken = refreshToken
+    
+    // Sync to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('accessToken', accessToken)
+      if (refreshToken) {
+        localStorage.setItem('refreshToken', refreshToken)
+      }
+    }
   }
 
   getAccessToken(): string | null {
+    // Always check localStorage as source of truth
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('accessToken')
+      if (stored !== this.accessToken) {
+        this.accessToken = stored
+      }
+    }
     return this.accessToken
   }
 
   getRefreshToken(): string | null {
+    // Always check localStorage as source of truth
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('refreshToken')
+      if (stored !== this.refreshToken) {
+        this.refreshToken = stored
+      }
+    }
     return this.refreshToken
   }
 
   clearTokens() {
     this.accessToken = null
     this.refreshToken = null
+    
+    // Clear from localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('refreshToken')
+    }
   }
 
   isAuthenticated(): boolean {
-    return !!this.accessToken
+    return !!this.getAccessToken()
   }
 }
 
@@ -48,6 +84,11 @@ apiClient.interceptors.request.use(
     const token = tokenManager.getAccessToken()
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+    } else {
+      // Log if token is missing for authenticated endpoints
+      if (config.url?.includes('/auth/') || config.url?.includes('/preferences/') || config.url?.includes('/orders/')) {
+        console.warn('API request without token:', config.url)
+      }
     }
     return config
   },
@@ -74,8 +115,13 @@ apiClient.interceptors.response.use(
             refreshToken,
           })
 
-          const { accessToken, refreshToken: newRefreshToken } = response.data
-          tokenManager.setTokens(accessToken, newRefreshToken)
+          // Handle response format: { success: true, accessToken: "...", refreshToken: "..." }
+          const accessToken = response.data.accessToken || response.data.data?.accessToken
+          const newRefreshToken = response.data.refreshToken || response.data.data?.refreshToken
+          
+          if (accessToken) {
+            tokenManager.setTokens(accessToken, newRefreshToken || refreshToken)
+          }
 
           // Retry the original request with new token
           originalRequest.headers.Authorization = `Bearer ${accessToken}`
@@ -102,6 +148,12 @@ export interface ApiResponse<T = any> {
   accessToken?: string
   refreshToken?: string
   errors?: string[]
+  pagination?: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
 }
 
 // API methods
@@ -181,6 +233,76 @@ export const api = {
       }),
 
     deletePicture: () => apiClient.delete<ApiResponse>('/api/profile/picture'),
+  },
+
+  // User preferences & onboarding
+  preferences: {
+    get: () => apiClient.get<ApiResponse>('/api/users/preferences'),
+
+    save: (data: {
+      familySize: number
+      role: string
+      dietaryRestrictions: string[]
+      cuisinePreferences: string[]
+      budgetRange: string
+      shoppingFrequency: string
+      cookingFrequency: string
+      cookingSkill: string
+      mealPlanning: boolean
+      favoriteIngredients: string[]
+      allergies: string[]
+    }) => apiClient.post<ApiResponse>('/api/users/preferences', data),
+
+    update: (data: any) => apiClient.put<ApiResponse>('/api/users/preferences', data),
+
+    onboardingStatus: () => apiClient.get<ApiResponse>('/api/users/onboarding-status'),
+  },
+
+  // Orders & Payment
+  orders: {
+    create: (data: {
+      cartItems: Array<{ productId: string; quantity: number }>
+      deliveryAddress: {
+        street: string
+        city: string
+        region: string
+        phone: string
+        additionalInfo?: string
+      }
+      discount?: number
+      credits?: number
+      deliveryNotes?: string
+    }) => apiClient.post<ApiResponse>('/api/orders', data),
+
+    verifyPayment: (data: { reference: string }) =>
+      apiClient.post<ApiResponse>('/api/orders/verify-payment', data),
+
+    paymentStatus: (reference: string) =>
+      apiClient.get<ApiResponse>(`/api/orders/payment-status?reference=${reference}`),
+
+    list: (params?: { page?: number; limit?: number; status?: string }) =>
+      apiClient.get<ApiResponse>('/api/orders', { params }),
+
+    getById: (id: string) => apiClient.get<ApiResponse>(`/api/orders/${id}`),
+
+    cancel: (id: string, reason: string) =>
+      apiClient.post<ApiResponse>(`/api/orders/${id}/cancel`, { reason }),
+
+    getPending: (pendingOrderId: string) =>
+      apiClient.get<ApiResponse>(`/api/orders/pending/${pendingOrderId}`),
+
+    cancelPending: (pendingOrderId: string) =>
+      apiClient.post<ApiResponse>(`/api/orders/pending/${pendingOrderId}/cancel`),
+  },
+
+  // Bundles
+  bundles: {
+    list: (params?: { category?: string; limit?: number; offset?: number }) =>
+      apiClient.get<ApiResponse>('/api/bundles', { params }),
+
+    personalized: () => apiClient.get<ApiResponse>('/api/bundles/personalized'),
+
+    getById: (bundleId: string) => apiClient.get<ApiResponse>(`/api/bundles/${bundleId}`),
   },
 }
 

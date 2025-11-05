@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -28,23 +29,45 @@ import {
 } from "lucide-react"
 import Header from "@/components/header"
 import LocationPicker from "@/components/location-picker"
+import { useAuthStore } from "@/stores/auth-store"
+import { toast } from "sonner"
 
 type ProfileTab = "account" | "messages" | "orders" | "vouchers" | "gifts" | "management"
 
 export default function ProfilePage() {
+  const router = useRouter()
+  const { user, isAuthenticated, signout, isLoading } = useAuthStore()
   const [activeTab, setActiveTab] = useState<ProfileTab>("account")
   const [isEditingAddress, setIsEditingAddress] = useState(false)
   const [selectedLocation, setSelectedLocation] = useState("1st Floor Marble House, South Industrial Area, Adabraka, Greater Accra")
   const [newsletterPreference, setNewsletterPreference] = useState("receive")
 
-  // Mock user data
-  const user = {
-    name: "William Duncan Bills",
-    email: "willsduncan@gmail.com",
-    phone: "+233 542602811 / +233 265713327",
-    avatar: null, // Will use initials if no avatar
-    address: "1st Floor Marble House, South Industrial Area, Adabraka, Greater Accra"
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login')
+    }
+  }, [isLoading, isAuthenticated, router])
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <p className="text-center text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    )
   }
+
+  // Return null if not authenticated (redirecting)
+  if (!isAuthenticated || !user) {
+    return null
+  }
+
+  // Use real user data from auth store
+  const fullName = `${user.firstName} ${user.lastName}`
 
   // Mock orders data
   const orders = [
@@ -103,6 +126,16 @@ export default function ProfilePage() {
     return name.split(" ").map(n => n[0]).join("").toUpperCase()
   }
 
+  const handleLogout = async () => {
+    try {
+      await signout()
+      toast.success("Logged out successfully")
+      router.push('/')
+    } catch (error) {
+      toast.error("Failed to logout")
+    }
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Delivered": return "bg-green-100 text-green-800"
@@ -136,14 +169,14 @@ export default function ProfilePage() {
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-[#D35F0E] rounded-full flex items-center justify-center text-white text-xl font-bold">
-                {user.avatar ? (
-                  <Image src={user.avatar} alt="Profile" width={64} height={64} className="rounded-full" />
+                {user.profilePicture ? (
+                  <Image src={user.profilePicture} alt="Profile" width={64} height={64} className="rounded-full" />
                 ) : (
-                  getInitials(user.name)
+                  getInitials(fullName)
                 )}
               </div>
               <div>
-                <h3 className="text-xl font-semibold">{user.name}</h3>
+                <h3 className="text-xl font-semibold">{fullName}</h3>
                 <p className="text-gray-600">{user.email}</p>
               </div>
             </div>
@@ -172,7 +205,7 @@ export default function ProfilePage() {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="name">Full Name</Label>
-                <Input id="name" defaultValue="ERIC BOAHEN" />
+                <Input id="name" defaultValue={fullName} />
               </div>
               <div>
                 <Label htmlFor="location">Location</Label>
@@ -182,8 +215,8 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <Label htmlFor="phone">Phone Numbers</Label>
-                <Input id="phone" defaultValue="+233 542602811 / +233 265713327" />
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input id="phone" defaultValue={user.phoneNumber} />
               </div>
               <div className="flex gap-2">
                 <Button onClick={() => setIsEditingAddress(false)} className="bg-[#D35F0E] hover:bg-[#D35F0E]/90">
@@ -196,11 +229,9 @@ export default function ProfilePage() {
             </div>
           ) : (
             <div className="space-y-2">
-              <p className="font-semibold">ERIC BOAHEN</p>
-              <p>1st Floor Marble House</p>
-              <p>South Industrial Area</p>
-              <p>Adabraka, Greater Accra</p>
-              <p className="text-gray-600">{user.phone}</p>
+              <p className="font-semibold">{fullName.toUpperCase()}</p>
+              <p>{selectedLocation}</p>
+              <p className="text-gray-600">{user.phoneNumber}</p>
             </div>
           )}
         </CardContent>
@@ -360,7 +391,7 @@ export default function ProfilePage() {
               <p className="text-sm text-red-600">This action cannot be undone. This will permanently delete your account.</p>
             </div>
             <Button variant="destructive" className="flex items-center gap-2">
-              <Trash2 className="h-4 w-4" />
+              <Image src="/trash-orange.png" alt="Trash" width={20} height={20} />
               Delete Account
             </Button>
           </div>
@@ -427,7 +458,10 @@ export default function ProfilePage() {
                 ))}
                 
                 {/* Logout */}
-                <button className="w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors border-t border-gray-200">
+                <button 
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors border-t border-gray-200"
+                >
                   <LogOut className="h-5 w-5" />
                   <span>Logout</span>
                 </button>

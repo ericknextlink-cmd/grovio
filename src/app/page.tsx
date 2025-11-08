@@ -68,7 +68,7 @@ export default function HomePage() {
 
       <main className="w-full px-2 sm:px-4 md:container md:mx-auto md:px-6 py-4 sm:py-8 md:py-12">
         {/* Bulk Supplies Button */}
-        <div className="flex justify-end mb-4 md:mb-0">
+        <div className="flex justify-end mb-4 md:mb-0 relative top-0 lg:top-0 md:-top-6">
           <Button className="bg-[#D35F0E] hover:bg-[#D35F0E]/90 text-white px-4 md:px-6 py-1.5 md:py-2 text-sm md:text-base rounded-full">
             Bulk Supplies
           </Button>
@@ -83,7 +83,7 @@ export default function HomePage() {
             <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-2xl xl:text-4xl font-bold text-white -mb-4 md:-mb-8 lg:-mb-12">
               {heroSlides[currentSlide].title}
             </h1>
-            <p className="text-white text-lg sm:text-xl md:text-2xl lg:text-xl xl:text-xl mt-4 md:mt-8 lg:mt-12 px-4">
+            <p className="text-white text-xs sm:text-[16px] md:text-[16px] lg:text-[16px] xl:text-[16px] mt-4 md:mt-8 lg:mt-12 px-4">
               {heroSlides[currentSlide].subtitle}
             </p>
           </div>

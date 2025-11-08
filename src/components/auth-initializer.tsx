@@ -12,7 +12,9 @@ export function AuthInitializer() {
 
   useEffect(() => {
     // Initialize auth state from tokens on mount
-    initializeAuth()
+    initializeAuth().catch((error) => {
+      console.error('Failed to initialize auth:', error)
+    })
   }, [initializeAuth])
 
   return null // This component doesn't render anything

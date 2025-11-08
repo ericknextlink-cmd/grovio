@@ -119,8 +119,9 @@ export const useGoogleAuth = () => {
               router.push('/')
             }
           } catch (error) {
-            console.warn('🟢 MAIN: Onboarding check failed, redirecting to home:', error)
-            router.push('/')
+            // If onboarding check fails, assume not completed and redirect to onboarding
+            console.warn('🟢 MAIN: Onboarding check failed, redirecting to onboarding:', error)
+            router.push('/onboarding')
           }
           
           // Small delay before reload to allow navigation

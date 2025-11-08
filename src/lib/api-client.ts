@@ -304,6 +304,29 @@ export const api = {
 
     getById: (bundleId: string) => apiClient.get<ApiResponse>(`/api/bundles/${bundleId}`),
   },
+
+  // Cart
+  cart: {
+    get: () => apiClient.get<ApiResponse>('/api/cart'),
+
+    addOrRemove: (data: {
+      product_id: string
+      action: 'add' | 'remove'
+      quantity?: number
+    }) => apiClient.post<ApiResponse>('/api/cart', data),
+
+    clear: () => apiClient.delete<ApiResponse>('/api/cart'),
+  },
+
+  // Favorites
+  favorites: {
+    get: () => apiClient.get<ApiResponse>('/api/favorites'),
+
+    addOrRemove: (data: {
+      product_id: string
+      action: 'add' | 'remove'
+    }) => apiClient.post<ApiResponse>('/api/favorites', data),
+  },
 }
 
 export default apiClient

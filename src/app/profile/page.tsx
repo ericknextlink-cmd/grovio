@@ -25,12 +25,15 @@ import {
   Calendar,
   Package,
   Star,
-  Trash2
+  Trash2,
+  CheckCircle,
+  AlertCircle
 } from "lucide-react"
 import Header from "@/components/header"
 import LocationPicker from "@/components/location-picker"
 import { useAuthStore } from "@/stores/auth-store"
 import { toast } from "sonner"
+import { api } from "@/lib/api-client"
 
 type ProfileTab = "account" | "messages" | "orders" | "vouchers" | "gifts" | "management"
 
@@ -41,13 +44,47 @@ export default function ProfilePage() {
   const [isEditingAddress, setIsEditingAddress] = useState(false)
   const [selectedLocation, setSelectedLocation] = useState("1st Floor Marble House, South Industrial Area, Adabraka, Greater Accra")
   const [newsletterPreference, setNewsletterPreference] = useState("receive")
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean | null>(null)
+  const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(false)
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated - but wait for auth to initialize
   useEffect(() => {
+    // Only redirect if auth has finished loading and user is not authenticated
+    // This prevents premature redirects before tokens are checked
     if (!isLoading && !isAuthenticated) {
-      router.push('/login')
+      // Double-check if we have tokens - if yes, auth might still be initializing
+      const hasToken = typeof window !== 'undefined' && localStorage.getItem('accessToken')
+      if (!hasToken) {
+        router.push('/login')
+      }
     }
   }, [isLoading, isAuthenticated, router])
+
+  // Check onboarding status when component loads and user is authenticated
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      if (!isAuthenticated || isLoading) return
+      
+      setIsCheckingOnboarding(true)
+      try {
+        const response = await api.preferences.onboardingStatus()
+        const completed = response.data?.data?.onboardingCompleted || false
+        setHasCompletedOnboarding(completed)
+      } catch (error) {
+        console.warn('Failed to check onboarding status:', error)
+        // If check fails, assume not completed to be safe
+        setHasCompletedOnboarding(false)
+      } finally {
+        setIsCheckingOnboarding(false)
+      }
+    }
+
+    checkOnboardingStatus()
+  }, [isAuthenticated, isLoading])
+
+  const handleCompleteOnboarding = () => {
+    router.push('/onboarding')
+  }
 
   // Show loading state
   if (isLoading) {
@@ -157,6 +194,46 @@ export default function ProfilePage() {
 
   const renderAccountSection = () => (
     <div className="space-y-6">
+      {/* Onboarding Status Card */}
+      {hasCompletedOnboarding === false && (
+        <Card className="border-2 border-orange-200 bg-orange-50">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <AlertCircle className="h-6 w-6 text-orange-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-orange-900 mb-2">
+                  Complete Your Profile Setup
+                </h3>
+                <p className="text-orange-800 mb-4">
+                  To get the best shopping experience with personalized recommendations, please complete your onboarding preferences.
+                </p>
+                <Button 
+                  onClick={handleCompleteOnboarding}
+                  className="bg-[#D35F0E] hover:bg-[#D35F0E]/90 text-white"
+                >
+                  Complete Onboarding
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {hasCompletedOnboarding === true && (
+        <Card className="border-2 border-green-200 bg-green-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <p className="text-green-800 font-medium">
+                Your profile setup is complete! You're all set to enjoy personalized shopping.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Account Name and Email */}
       <Card>
         <CardHeader className="bg-linear-to-r from-orange-100 to-orange-50">

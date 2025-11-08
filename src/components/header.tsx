@@ -28,7 +28,7 @@ export default function Header() {
   }
 
   return (
-    <header className="bg-[#181725] text-white">
+    <header className="bg-[#181725] text-white sticky top-0 z-50 shadow-md">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo - Always visible */}

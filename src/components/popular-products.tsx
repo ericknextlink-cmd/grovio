@@ -22,13 +22,13 @@ export default function PopularProducts() {
       
       <Tabs defaultValue="all" className="w-full">
         <TabsList className="flex w-full overflow-x-auto scrollbar-hide bg-gray-100 p-1 rounded-lg gap-1 lg:grid lg:grid-cols-7">
-          <TabsTrigger value="all" className="data-[state=active]:bg-white data-[state=active]:text-grovio-navy text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap flex-shrink-0">All</TabsTrigger>
-          <TabsTrigger value="dairy" className="data-[state=active]:bg-white data-[state=active]:text-grovio-navy text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap flex-shrink-0">Dairy</TabsTrigger>
-          <TabsTrigger value="beverages" className="data-[state=active]:bg-white data-[state=active]:text-grovio-navy text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap flex-shrink-0">Beverages</TabsTrigger>
-          <TabsTrigger value="seasonings" className="data-[state=active]:bg-white data-[state=active]:text-grovio-navy text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap flex-shrink-0">Seasonings</TabsTrigger>
-          <TabsTrigger value="vegetables" className="data-[state=active]:bg-white data-[state=active]:text-grovio-navy text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap flex-shrink-0">Vegetables</TabsTrigger>
-          <TabsTrigger value="grains" className="data-[state=active]:bg-white data-[state=active]:text-grovio-navy text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap flex-shrink-0">Grains</TabsTrigger>
-          <TabsTrigger value="meat" className="data-[state=active]:bg-white data-[state=active]:text-grovio-navy text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap flex-shrink-0">Meat</TabsTrigger>
+          <TabsTrigger value="all" className="data-[state=active]:bg-white data-[state=active]:text-grovio-navy text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap shrink-0">All</TabsTrigger>
+          <TabsTrigger value="dairy" className="data-[state=active]:bg-white data-[state=active]:text-grovio-navy text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap shrink-0">Dairy</TabsTrigger>
+          <TabsTrigger value="beverages" className="data-[state=active]:bg-white data-[state=active]:text-grovio-navy text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap shrink-0">Beverages</TabsTrigger>
+          <TabsTrigger value="seasonings" className="data-[state=active]:bg-white data-[state=active]:text-grovio-navy text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap shrink-0">Seasonings</TabsTrigger>
+          <TabsTrigger value="vegetables" className="data-[state=active]:bg-white data-[state=active]:text-grovio-navy text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap shrink-0">Vegetables</TabsTrigger>
+          <TabsTrigger value="grains" className="data-[state=active]:bg-white data-[state=active]:text-grovio-navy text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap shrink-0">Grains</TabsTrigger>
+          <TabsTrigger value="meat" className="data-[state=active]:bg-white data-[state=active]:text-grovio-navy text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap shrink-0">Meat</TabsTrigger>
         </TabsList>
         
         <TabsContent value="all" className="mt-6 sm:mt-8">

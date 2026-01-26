@@ -4,50 +4,133 @@
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 import { MapPin, Clock, Wallet, CreditCard, Smartphone, Building } from "lucide-react"
 import { useCart } from "@/contexts/cart-context"
 import { useAuthStore } from "@/stores/auth-store"
+import { toast } from "sonner"
+import { api } from "@/lib/api-client"
 import LocationPicker from "@/components/location-picker"
+import { useOnboardingGuard } from "@/hooks/use-onboarding-guard"
 
 export default function CheckoutPage() {
-  const { items, getTotalPrice, getTotalItems } = useCart()
-  const { user } = useAuthStore()
-  const [selectedLocation, setSelectedLocation] = useState("")
-  const [deliveryDate, setDeliveryDate] = useState("16 September")
-  const [paymentMethod, setPaymentMethod] = useState("mobile-money")
-  const [mobileMoneyProvider, setMobileMoneyProvider] = useState("mtn")
-  const [mobileNumber, setMobileNumber] = useState("")
+  const router = useRouter()
+  const { items, getTotalPrice, getTotalItems, clearCart } = useCart()
+  const { user, isAuthenticated } = useAuthStore()
+  const { isChecking: checkingOnboarding } = useOnboardingGuard()
+  
+  // Delivery address fields
+  const [street, setStreet] = useState("")
+  const [city, setCity] = useState("Accra")
+  const [region, setRegion] = useState("Greater Accra")
+  const [phone, setPhone] = useState(user?.phoneNumber || "")
+  const [additionalInfo, setAdditionalInfo] = useState("")
+  const [deliveryNotes, setDeliveryNotes] = useState("")
+  
+  // Payment & discount
+  const [paymentMethod, setPaymentMethod] = useState("paystack")
   const [discountCode, setDiscountCode] = useState("")
+  const [isProcessing, setIsProcessing] = useState(false)
 
   const itemsTotal = getTotalPrice()
-  const deliveryFee = 100
-  const total = itemsTotal + deliveryFee
+  const deliveryFee = 0 // Free delivery
+  const discount = 0 // Calculate based on discount code if needed
+  const credits = 0 // From user account if available
+  const total = itemsTotal + deliveryFee - discount - credits
 
-  const handleConfirmOrder = () => {
-    // TODO: Process payment
-    console.log("Processing order...")
-    
-    // Generate order number
-    const orderNumber = Date.now().toString()
-    
-    // Redirect to invoice with order details
-    const params = new URLSearchParams({
-      order: orderNumber,
-      name: user ? `${user.firstName} ${user.lastName}` : "Guest User",
-      address: selectedLocation || "Adjuma Crescent Road\nSouth Industrial Area\nAccra, Ghana",
-      phone: user?.phoneNumber || "No phone number",
-      date: new Date().toLocaleDateString("en-GB"),
-      discount: discountCode ? "200" : "0",
-      credits: "0"
-    })
-    
-    window.location.href = `/invoice?${params.toString()}`
+  const handleConfirmOrder = async () => {
+    // Validation
+    if (!isAuthenticated) {
+      toast.error('Please login to place an order')
+      router.push('/login')
+      return
+    }
+
+    if (!street || !city || !region || !phone) {
+      toast.error('Please fill in all delivery address fields')
+      return
+    }
+
+    if (items.length === 0) {
+      toast.error('Your cart is empty')
+      return
+    }
+
+    setIsProcessing(true)
+
+    try {
+      // Prepare cart items for backend
+      const cartItems = items.map(item => ({
+        productId: item.id,
+        quantity: item.quantity
+      }))
+
+      // Prepare delivery address
+      const deliveryAddress = {
+        street,
+        city,
+        region,
+        phone,
+        additionalInfo
+      }
+
+      // Create order and initialize payment
+      const response = await api.orders.create({
+        cartItems,
+        deliveryAddress,
+        discount,
+        credits,
+        deliveryNotes
+      })
+
+      if (response.data.success) {
+        const { authorizationUrl, paymentReference, pendingOrderId } = response.data.data
+
+        // Store pending order ID for callback
+        localStorage.setItem('pending_order_id', pendingOrderId)
+        localStorage.setItem('payment_reference', paymentReference)
+
+        // Open Paystack payment page
+        toast.success('Redirecting to payment...')
+        
+        // Option 1: Redirect in same window
+        window.location.href = authorizationUrl
+        
+        // Option 2: Open in popup (uncomment if preferred)
+        // const popup = window.open(
+        //   authorizationUrl,
+        //   'Paystack Payment',
+        //   'width=600,height=700'
+        // )
+      } else {
+        throw new Error(response.data.message || 'Failed to create order')
+      }
+    } catch (error: any) {
+      console.error('Order creation error:', error)
+      toast.error(
+        error.response?.data?.message || 
+        error.message || 
+        'Failed to create order. Please try again.'
+      )
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  // Show loading while checking onboarding
+  if (checkingOnboarding) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#D35F0E]" />
+      </div>
+    )
   }
 
   if (items.length === 0) {
@@ -100,13 +183,83 @@ export default function CheckoutPage() {
                     </p>
                   </div>
                   
-                  <LocationPicker 
-                    selectedLocation={selectedLocation}
-                    onLocationSelect={setSelectedLocation}
-                  />
-                  
-                  <div className="text-sm text-gray-600">
-                    <p>Contact: {user?.phoneNumber || "No phone number"}</p>
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="street">Street Address *</Label>
+                      <Input 
+                        id="street"
+                        placeholder="e.g., 123 Main Street, House Number"
+                        value={street}
+                        onChange={(e) => setStreet(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="city">City *</Label>
+                        <Input 
+                          id="city"
+                          placeholder="Accra"
+                          value={city}
+                          onChange={(e) => setCity(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="region">Region *</Label>
+                        <Select value={region} onValueChange={setRegion}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select region" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Greater Accra">Greater Accra</SelectItem>
+                            <SelectItem value="Ashanti">Ashanti</SelectItem>
+                            <SelectItem value="Western">Western</SelectItem>
+                            <SelectItem value="Eastern">Eastern</SelectItem>
+                            <SelectItem value="Central">Central</SelectItem>
+                            <SelectItem value="Northern">Northern</SelectItem>
+                            <SelectItem value="Upper East">Upper East</SelectItem>
+                            <SelectItem value="Upper West">Upper West</SelectItem>
+                            <SelectItem value="Volta">Volta</SelectItem>
+                            <SelectItem value="Bono">Bono</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="phone">Contact Phone *</Label>
+                      <Input 
+                        id="phone"
+                        type="tel"
+                        placeholder="+233241234567"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="additionalInfo">Additional Info (Optional)</Label>
+                      <Input 
+                        id="additionalInfo"
+                        placeholder="e.g., Gate code, Landmark"
+                        value={additionalInfo}
+                        onChange={(e) => setAdditionalInfo(e.target.value)}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="deliveryNotes">Delivery Notes (Optional)</Label>
+                      <Textarea 
+                        id="deliveryNotes"
+                        placeholder="Any special delivery instructions..."
+                        value={deliveryNotes}
+                        onChange={(e) => setDeliveryNotes(e.target.value)}
+                        rows={3}
+                      />
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -135,88 +288,23 @@ export default function CheckoutPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Wallet className="h-5 w-5 text-[#D35F0E]" />
-                  Select Payment Method
+                  Payment Method
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-4">
-                  
-                  {/* Credit Card */}
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="credit-card" id="credit-card" />
-                    <Label htmlFor="credit-card" className="flex items-center gap-2">
-                      <CreditCard className="h-4 w-4" />
-                      Make Payment with Credit Card (Mastercard, Visa)
-                    </Label>
+                <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="h-5 w-5 text-[#D35F0E]" />
+                    <span className="font-medium">Secure Payment via Paystack</span>
                   </div>
-
-                  {/* Mobile Money */}
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="mobile-money" id="mobile-money" />
-                      <Label htmlFor="mobile-money" className="flex items-center gap-2">
-                        <Smartphone className="h-4 w-4" />
-                        Pay with Mobile Money
-                      </Label>
-                    </div>
-                    {paymentMethod === "mobile-money" && (
-                      <div className="ml-6 space-y-3">
-                        <div className="space-y-2">
-                          <Label htmlFor="mobile-provider">Select Mobile Money Provider</Label>
-                          <Select value={mobileMoneyProvider} onValueChange={setMobileMoneyProvider}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select provider" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="mtn">
-                                <div className="flex items-center gap-2">
-                                  <Image src="https://www.logo.wine/a/logo/MTN_Group/MTN_Group-Logo.wine.svg" alt="MTN" width={20} height={20} className="w-4 h-4" />
-                                  MTN Mobile Money
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="telecel">
-                                <div className="flex items-center gap-2">
-                                  <Image src="https://www.gsma.com/get-involved/gsma-membership/wp-content/uploads/2014/06/Telecel-LOGO-RED-PNG.png" alt="Telecel" width={20} height={20} className="w-4 h-4" />
-                                  Telecel Cash
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="airtel-tigo">
-                                <div className="flex items-center gap-2">
-                                  <Image src="https://static.wikia.nocookie.net/logopedia/images/7/7b/ATGhana.png/" alt="AirtelTigo" width={20} height={20} className="w-4 h-4" />
-                                  AirtelTigo Cash
-                                </div>
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <Input 
-                          placeholder="Enter Mobile Number Here"
-                          value={mobileNumber}
-                          onChange={(e) => setMobileNumber(e.target.value)}
-                        />
-                      </div>
-                    )}
+                  <p className="text-sm text-gray-600">
+                    Pay safely with Credit/Debit Card, Bank Transfer, or Mobile Money
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <Image src="/logo.png" alt="Paystack" width={20} height={20} className="w-5 h-5" />
+                    <span>Powered by Paystack - SSL Encrypted</span>
                   </div>
-
-                  {/* Bank Transfer */}
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="bank-transfer" id="bank-transfer" />
-                      <Label htmlFor="bank-transfer" className="flex items-center gap-2">
-                        <Building className="h-4 w-4" />
-                        Bank Deposit / Bank Transfer
-                      </Label>
-                    </div>
-                    {paymentMethod === "bank-transfer" && (
-                      <div className="ml-6 p-4 bg-gray-100 rounded-lg space-y-2 text-sm">
-                        <p><span className="font-medium">Account Name:</span> Grovio Ghana</p>
-                        <p><span className="font-medium">Bank Name:</span> Consolidated Bank Ghana(CBG)</p>
-                        <p><span className="font-medium">Account Number:</span> 294948992294928</p>
-                        <p><span className="font-medium">Branch:</span> Kokomlemle</p>
-                      </div>
-                    )}
-                  </div>
-                </RadioGroup>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -254,8 +342,16 @@ export default function CheckoutPage() {
                   <Button 
                     className="w-full bg-[#D35F0E] hover:bg-[#D35F0E]/90 text-white py-3 text-lg"
                     onClick={handleConfirmOrder}
+                    disabled={isProcessing}
                   >
-                    Confirm Order
+                    {isProcessing ? (
+                      <span className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                        Processing...
+                      </span>
+                    ) : (
+                      <>Proceed to Payment</>
+                    )}
                   </Button>
                 </div>
               </CardContent>

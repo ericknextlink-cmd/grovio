@@ -37,7 +37,7 @@ export default function ProductGrid({ products, title = "Featured Products" }: P
       <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-grovio-navy scale-[0.8] sm:scale-[0.9] md:scale-[0.8] lg:scale-[0.85] -ml-10 md:-ml-18 lg:-ml-24 -mt-2 md:-mt-4 lg:-mt-4">{title}</h2>
       <div className="grid grid-cols-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
         {products.map((product) => (
-          <Card key={product.id} className="group hover:shadow-lg transition-shadow h-full flex flex-col">
+          <Card key={product.id} className="group hover:shadow-lg transition-shadow h-full flex flex-col rounded-none">
             <Link href={`/product/${product.slug}`}>
               <CardContent className="p-2 md:p-4 flex-1 flex flex-col">
                 <div className="relative mb-2 md:mb-4">

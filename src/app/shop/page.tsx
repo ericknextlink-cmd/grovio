@@ -29,7 +29,7 @@ export default function ShopPage() {
         {/* Bundles Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
           {shopBundles.map((bundle) => (
-            <Card key={bundle.id} className="group hover:shadow-xl transition-all duration-300 overflow-hidden">
+            <Card key={bundle.id} className="group hover:shadow-xl transition-all duration-300 overflow-hidden rounded-none">
               <div className="relative h-48 bg-gray-100">
                 <Image
                   src={bundle.image}

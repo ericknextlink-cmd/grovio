@@ -2,6 +2,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -10,6 +11,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { ChefHat, Users, Utensils, ShoppingBag, Sparkles } from "lucide-react"
+import { toast } from "sonner"
+import { api } from "@/lib/api-client"
 
 interface OnboardingData {
   householdSize: string
@@ -33,7 +36,9 @@ const shoppingFrequencies = ["Daily", "2-3 times/week", "Weekly", "Bi-weekly"]
 const cookingSkills = ["Beginner", "Intermediate", "Advanced", "Expert"]
 
 export default function AIOnboarding() {
+  const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [data, setData] = useState<OnboardingData>({
     householdSize: "",
     cookingFrequency: "",
@@ -66,10 +71,55 @@ export default function AIOnboarding() {
     }
   }
 
-  const handleSubmit = () => {
-    // Save onboarding data and use for AI recommendations
-    console.log("Onboarding data:", data)
-    // Here you would typically send this to your backend/AI service
+  const handleSubmit = async () => {
+    setIsSubmitting(true)
+    
+    try {
+      // Convert household size to number
+      const familySize = parseInt(data.householdSize.split('-')[0]) || 1
+      
+      // Prepare data for backend
+      const preferencesData = {
+        familySize,
+        role: 'user', // Default role, can be made dynamic
+        dietaryRestrictions: data.dietaryRestrictions,
+        cuisinePreferences: data.cuisinePreferences,
+        budgetRange: data.budgetRange,
+        shoppingFrequency: data.shoppingFrequency,
+        cookingFrequency: data.cookingFrequency,
+        cookingSkill: data.cookingSkill.toLowerCase(),
+        mealPlanning: data.mealPlanning,
+        favoriteIngredients: data.favoriteIngredients,
+        allergies: data.allergies
+      }
+      
+      // Save to backend
+      const response = await api.preferences.save(preferencesData)
+      
+      if (response.data.success) {
+        // Also save locally as backup
+        localStorage.setItem('onboarding_data', JSON.stringify(data))
+        localStorage.setItem('onboarding_completed', 'true')
+        
+        console.log("Onboarding data saved:", response.data)
+        
+        toast.success('Your preferences have been saved!', {
+          description: 'Enjoy your personalized shopping experience'
+        })
+        
+        // Redirect to home page
+        router.push('/')
+      } else {
+        throw new Error(response.data.message || 'Failed to save preferences')
+      }
+    } catch (error: any) {
+      console.error('Error saving onboarding data:', error)
+      toast.error('Failed to save preferences', {
+        description: error.response?.data?.message || error.message || 'Please try again'
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const renderStep = () => {
@@ -356,9 +406,22 @@ export default function AIOnboarding() {
                 Next
               </Button>
             ) : (
-              <Button onClick={handleSubmit} className="bg-grovio-orange hover:bg-grovio-orange/90">
-                <Sparkles className="h-4 w-4 mr-2" />
-                Start Getting Recommendations
+              <Button 
+                onClick={handleSubmit} 
+                className="bg-grovio-orange hover:bg-grovio-orange/90"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Start Getting Recommendations
+                  </>
+                )}
               </Button>
             )}
           </div>

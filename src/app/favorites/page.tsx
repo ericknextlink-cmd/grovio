@@ -95,7 +95,7 @@ export default function FavoritesPage() {
                           className="flex items-center gap-1 text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
                           onClick={() => handleRemoveFromFavorites(product.id)}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Image src="/trash-orange.png" alt="Trash" width={20} height={20} />
                           Remove
                         </Button>
                       </div>

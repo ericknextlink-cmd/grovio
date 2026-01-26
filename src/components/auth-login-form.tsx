@@ -36,7 +36,22 @@ export function LoginForm() {
   const onSubmit = async (data: SigninFormData) => {
     const result = await signin(data)
     if (result.success) {
-      router.push("/")
+      // Check onboarding status and redirect accordingly
+      try {
+        const { api } = await import('@/lib/api-client')
+        const onboardingResponse = await api.preferences.onboardingStatus()
+        const hasCompletedOnboarding = onboardingResponse.data?.data?.onboardingCompleted || false
+        
+        if (!hasCompletedOnboarding) {
+          router.push('/onboarding')
+        } else {
+          router.push('/')
+        }
+      } catch (error) {
+        // If onboarding check fails, assume not completed and redirect to onboarding
+        console.warn('Failed to check onboarding status, redirecting to onboarding:', error)
+        router.push('/onboarding')
+      }
     }
   }
 

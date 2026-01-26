@@ -134,7 +134,7 @@ export function AIShoppingAssistant({ onClose, aiResponse, cartData }: AIShoppin
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 ">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl h-[50vh] lg:h-[90vh] md:h-[90vh] flex flex-col relative overflow-hidden -mt-[520px] lg:mt-6 md:mt-4 scale-[0.9] lg:scale-[0.9] md:scale-[0.8] -left-3 lg:-left-30 md:-left-60 w-[100%] lg:w-[80%] md:w-[54%]">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl h-[50vh] lg:h-[90vh] md:h-[90vh] flex flex-col relative overflow-hidden -mt-[520px] lg:mt-6 md:mt-4 scale-[0.9] lg:scale-[0.9] md:scale-[0.8] -left-3 lg:-left-30 md:-left-60 lg:w-[80%] md:w-[54%]">
         {/* Close Button */}
         <Button
           variant="ghost"
@@ -146,7 +146,7 @@ export function AIShoppingAssistant({ onClose, aiResponse, cartData }: AIShoppin
         </Button>
 
         {/* Header */}
-        <div className="border-b border-gray-200 p-4 flex-shrink-0">
+        <div className="border-b border-gray-200 p-4 shrink-0">
           <h2 className="text-xl font-semibold text-gray-800">
             AI Shopping Assistant Suggestions
           </h2>
@@ -224,7 +224,7 @@ export function AIShoppingAssistant({ onClose, aiResponse, cartData }: AIShoppin
                       className="h-8 w-8 text-red-500 hover:text-red-700 ml-4"
                       onClick={() => removeItem(item.id)}
                     >
-                      <Image src="/Trash.svg" alt="Trash" width={20} height={20} />
+                      <Image src="/trash-orange.png" alt="Trash" width={20} height={20} />
                     </Button>
                   </div>
                 </div>
@@ -247,7 +247,7 @@ export function AIShoppingAssistant({ onClose, aiResponse, cartData }: AIShoppin
 
         {/* Bottom Section - Static */}
         {cartItems.length > 0 && (
-          <div className="border-t border-gray-200 p-4 space-y-4 bg-white flex-shrink-0">
+          <div className="border-t border-gray-200 p-4 space-y-4 bg-white shrink-0">
             {cartData?.totalSavings && cartData.totalSavings > 0 && (
               <div className="text-center">
                 <p className="text-sm text-green-600 font-medium">

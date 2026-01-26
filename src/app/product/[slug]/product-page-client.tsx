@@ -231,7 +231,7 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
             </Card>
 
             {/* Ask AI Section */}
-            <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+            <Card className="bg-linear-to-r from-purple-50 to-pink-50 border-purple-200">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">

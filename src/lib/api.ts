@@ -90,6 +90,8 @@ export class ApiService {
         ...defaultHeaders,
         ...options.headers,
       },
+      // IMPORTANT: Include credentials (cookies) for server-side auth flow
+      credentials: 'include',
     }
 
     try {
@@ -192,6 +194,7 @@ export class ApiService {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include cookies here too
         body: JSON.stringify({ refreshToken }),
       })
 
@@ -208,13 +211,13 @@ export class ApiService {
   }
 
   async getProfile(): Promise<ApiResponse> {
-    return this.request('/api/auth/profile', {
+    return this.request('/api/auth/me', {
       method: 'GET',
     })
   }
 
   async updateProfile(data: any): Promise<ApiResponse> {
-    return this.request('/api/auth/profile', {
+    return this.request('/api/auth/me', {
       method: 'PUT',
       body: JSON.stringify(data),
     })

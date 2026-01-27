@@ -1,9 +1,10 @@
 import { useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 
 export const useGoogleAuth = () => {
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const signInWithGoogle = useCallback(async () => {
     try {
@@ -12,11 +13,21 @@ export const useGoogleAuth = () => {
       
       console.log('Redirecting to Google OAuth via backend:', backendUrl)
 
-      // Determine where to redirect after auth (current page or dashboard)
+      // Determine where to redirect after auth
+      // 1. Check for 'redirect' query param (e.g. from protected route redirect)
+      const redirectParam = searchParams?.get('redirect')
+      
+      // 2. Fallback logic
       const currentPath = window.location.pathname
-      const redirectTo = currentPath === '/login' || currentPath === '/signup' 
-        ? '/dashboard' 
-        : currentPath
+      
+      let redirectTo = '/' // Default
+      
+      if (redirectParam) {
+        redirectTo = redirectParam
+      } else if (currentPath !== '/login' && currentPath !== '/signup') {
+        // If user is on a specific page (not auth pages), return them there
+        redirectTo = currentPath
+      }
 
       // Construct the backend auth URL with redirect param
       // The backend will handle the redirection to Google
@@ -29,12 +40,10 @@ export const useGoogleAuth = () => {
       console.error('Google sign-in error:', error)
       toast.error('Failed to initiate Google sign-in. Please try again.')
     }
-  }, [router])
+  }, [router, searchParams])
 
   return {
     signInWithGoogle,
     isLoading: false,
   }
 }
-
-

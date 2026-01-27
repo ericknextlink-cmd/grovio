@@ -222,6 +222,12 @@ export class ApiService {
       body: JSON.stringify(data),
     })
   }
+
+  async getOnboardingStatus(): Promise<ApiResponse> {
+    return this.request('/api/users/onboarding-status', {
+      method: 'GET',
+    })
+  }
 }
 
 // Create a singleton instance

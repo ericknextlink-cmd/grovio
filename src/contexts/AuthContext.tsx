@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { apiService, type ApiResponse } from '@/lib/api'
+import { useAuthStore } from '@/stores/auth-store'
 
 interface User {
   id: string
@@ -41,6 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const { initializeAuth: syncStoreAuth } = useAuthStore()
 
   const isAuthenticated = !!user
 
@@ -88,6 +90,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, router, searchParams])
 
+
+  // Check for tokens in URL params (fallback for cross-domain auth)
+  useEffect(() => {
+    const accessToken = searchParams.get('access_token')
+    const refreshToken = searchParams.get('refresh_token')
+
+    if (accessToken && refreshToken) {
+      console.log('Received tokens from URL, saving...')
+      localStorage.setItem('accessToken', accessToken)
+      localStorage.setItem('refreshToken', refreshToken)
+      
+      // Clean URL
+      const newUrl = window.location.pathname + (searchParams.get('redirect') ? `?redirect=${searchParams.get('redirect')}` : '')
+      window.history.replaceState({}, '', newUrl)
+      
+      // Refresh user with new tokens
+      refreshUser()
+      // Sync with global store for other components (like Header)
+      syncStoreAuth()
+    }
+  }, [searchParams, refreshUser, syncStoreAuth])
 
   // Check for existing session on mount (cookies or localStorage)
   useEffect(() => {

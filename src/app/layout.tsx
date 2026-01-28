@@ -1,5 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
+import { Suspense } from "react"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -34,17 +35,19 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <AuthProvider>
-            <AuthInitializer />
-            <CartProvider>
-              <FavoritesProvider>
-                {children}
-                {/* <Footer /> */}
-                <Toaster />
-                <SonnerToaster />
-              </FavoritesProvider>
-            </CartProvider>
-          </AuthProvider>
+          <Suspense fallback={null}>
+            <AuthProvider>
+              <AuthInitializer />
+              <CartProvider>
+                <FavoritesProvider>
+                  {children}
+                  {/* <Footer /> */}
+                  <Toaster />
+                  <SonnerToaster />
+                </FavoritesProvider>
+              </CartProvider>
+            </AuthProvider>
+          </Suspense>
         </ThemeProvider>
       </body>
     </html>

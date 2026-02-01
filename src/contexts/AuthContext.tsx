@@ -1,8 +1,9 @@
 "use client"
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { apiService, type ApiResponse } from '@/lib/api'
+import { useAuthStore } from '@/stores/auth-store'
 
 interface User {
   id: string
@@ -40,6 +41,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const { initializeAuth: syncStoreAuth } = useAuthStore()
 
   const isAuthenticated = !!user
 
@@ -53,16 +56,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         // Check onboarding status
         try {
-          // You might need to adjust this endpoint call based on your API structure
-          // Assuming onboardingStatus endpoint exists or using profile data
-          // For now, let's assume we check if profile is complete
-          const isProfileComplete = response.user.firstName && response.user.lastName
+          const onboardingRes = await apiService.getOnboardingStatus()
+          const hasCompletedOnboarding = onboardingRes.data?.onboardingCompleted
           
-          // If you have a specific endpoint for onboarding status:
-          // const onboardingRes = await apiService.preferences.onboardingStatus()
-          // const hasCompletedOnboarding = onboardingRes.data?.data?.onboardingCompleted
-          
-          // Redirect logic can be placed here or in a separate effect
+          // If onboarding is NOT complete, and we are not already on the onboarding page, redirect
+          if (hasCompletedOnboarding === false && pathname !== '/onboarding') {
+            console.log('Onboarding incomplete, redirecting...')
+            router.push('/onboarding')
+          } else if (hasCompletedOnboarding === true && (pathname === '/login' || pathname === '/signup')) {
+             // If onboarding IS complete, and we are on login/signup, redirect to intended page
+             // This handles the "auth complete" scenario
+             const redirect = searchParams.get('redirect')
+             if (redirect) {
+               router.push(redirect)
+             } else {
+               router.push('/')
+             }
+          }
         } catch (error) {
           console.warn('Failed to check onboarding status:', error)
         }
@@ -78,8 +88,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('accessToken')
       localStorage.removeItem('refreshToken')
     }
-  }, [])
+  }, [pathname, router, searchParams])
 
+
+  // Check for tokens in URL params (fallback for cross-domain auth)
+  useEffect(() => {
+    const accessToken = searchParams.get('access_token')
+    const refreshToken = searchParams.get('refresh_token')
+
+    if (accessToken && refreshToken) {
+      console.log('Received tokens from URL, saving...')
+      localStorage.setItem('accessToken', accessToken)
+      localStorage.setItem('refreshToken', refreshToken)
+      
+      // Clean URL
+      const newUrl = window.location.pathname + (searchParams.get('redirect') ? `?redirect=${searchParams.get('redirect')}` : '')
+      window.history.replaceState({}, '', newUrl)
+      
+      // Refresh user with new tokens
+      refreshUser()
+      // Sync with global store for other components (like Header)
+      syncStoreAuth()
+    }
+  }, [searchParams, refreshUser, syncStoreAuth])
 
   // Check for existing session on mount (cookies or localStorage)
   useEffect(() => {
@@ -102,20 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuth()
   }, [refreshUser])
 
-  // Post-auth redirection logic
-  useEffect(() => {
-    if (!isLoading && user) {
-      // If user is authenticated but on auth pages, redirect to dashboard
-      if (pathname === '/login' || pathname === '/signup') {
-        router.push('/dashboard')
-      }
-      
-      // Add onboarding redirect check here if needed
-      // if (!user.onboardingCompleted && pathname !== '/onboarding') {
-      //   router.push('/onboarding')
-      // }
-    }
-  }, [user, isLoading, pathname, router])
+  // Post-auth redirection logic handled in refreshUser now
 
   const login = async (email: string, password: string): Promise<ApiResponse> => {
     try {
@@ -127,6 +145,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (response.user) {
           setUser(response.user)
+          // Trigger onboarding check manually after login
+          await refreshUser()
         }
       }
 
@@ -159,12 +179,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshToken = async (): Promise<boolean> => {
     try {
       const refreshTokenValue = localStorage.getItem('refreshToken')
-      // If no refresh token in storage, maybe we have it in cookies?
-      // apiService.refreshToken handles logic, but usually requires sending the token.
-      // If using cookies, the backend handles refresh automatically via middleware or explicit call.
       
       if (!refreshTokenValue) {
-        return false
+        // If no token, maybe we have cookies? Try getting profile
+        try {
+            await refreshUser()
+            return !!user
+        } catch {
+            return false
+        }
       }
 
       const response = await apiService.refreshToken(refreshTokenValue)

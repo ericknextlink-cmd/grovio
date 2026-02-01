@@ -117,22 +117,14 @@ export const useGoogleAuth = () => {
     g.accounts.id.initialize({
       client_id: clientId,
       callback: handleGoogleCredential,
-      auto_select: false, // Enable this for even faster sign-in if you want
+      auto_select: false,
       cancel_on_tap_outside: true,
+      use_fedcm_for_prompt: true, // FedCM migration: browser-mediated prompt, no deprecated display/skip APIs
     })
 
-    // Display One Tap if not signed in
-    // You might want to check if user is already logged in before showing
     if (!tokenManager.isAuthenticated()) {
-        g.accounts.id.prompt((notification: any) => {
-            if (notification.isNotDisplayed()) {
-                console.log('One Tap not displayed:', notification.getNotDisplayedReason())
-            } else if (notification.isSkippedMoment()) {
-                console.log('One Tap skipped:', notification.getSkippedReason())
-            } else if (notification.isDismissedMoment()) {
-                console.log('One Tap dismissed:', notification.getDismissedReason())
-            }
-        })
+      // FedCM: do not use isNotDisplayed/getNotDisplayedReason or getSkippedReason; prompt() can be called with no callback
+      g.accounts.id.prompt()
     }
   }, [handleGoogleCredential])
 
@@ -156,6 +148,7 @@ export const useGoogleAuth = () => {
       client_id: clientId,
       callback: handleGoogleCredential,
       ux_mode: 'popup',
+      use_fedcm_for_button: true, // FedCM migration: use FedCM for button flow where supported
     })
 
     // Create a temporary container

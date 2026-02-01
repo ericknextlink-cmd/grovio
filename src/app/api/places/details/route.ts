@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 const GOOGLE_MAPS_KEY =
-  process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''
+  process.env.GOOGLE_MAPS_API_KEY!
 
 export async function GET(request: NextRequest) {
   const placeId = request.nextUrl.searchParams.get('place_id')?.trim()

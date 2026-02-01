@@ -27,6 +27,15 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "www.logo.wine",
       },
+      {
+        protocol: "https",
+        hostname: "**",
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        pathname: '/**',
+      },
     ],
   },
 };

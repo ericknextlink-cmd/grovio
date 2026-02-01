@@ -30,7 +30,6 @@ import {
   AlertCircle
 } from "lucide-react"
 import Header from "@/components/header"
-import LocationPicker from "@/components/location-picker"
 import { useAuthStore } from "@/stores/auth-store"
 import { toast } from "sonner"
 import { api } from "@/lib/api-client"
@@ -44,6 +43,16 @@ export default function ProfilePage() {
   const [isEditingAddress, setIsEditingAddress] = useState(false)
   const [selectedLocation, setSelectedLocation] = useState("1st Floor Marble House, South Industrial Area, Adabraka, Greater Accra")
   const [newsletterPreference, setNewsletterPreference] = useState("receive")
+  // Address fields for edit mode (split from selectedLocation for per-field editing)
+  const [addressFullName, setAddressFullName] = useState("")
+  const [addressLine1, setAddressLine1] = useState("1st Floor Marble House")
+  const [addressLine2, setAddressLine2] = useState("South Industrial Area")
+  const [addressArea, setAddressArea] = useState("Adabraka")
+  const [addressRegion, setAddressRegion] = useState("Greater Accra")
+  const [phoneNumbers, setPhoneNumbers] = useState<string[]>([])
+  const [newPhoneInput, setNewPhoneInput] = useState("")
+  const [editingPhoneIndex, setEditingPhoneIndex] = useState<number | null>(null)
+  const [editingPhoneValue, setEditingPhoneValue] = useState("")
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean | null>(null)
   const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(false)
 
@@ -81,6 +90,18 @@ export default function ProfilePage() {
 
     checkOnboardingStatus()
   }, [isAuthenticated, isLoading])
+
+  // Sync address name and phones from user when available
+  useEffect(() => {
+    if (!user) return
+    setAddressFullName((prev) => (prev === "" ? `${user.firstName} ${user.lastName}`.trim() : prev))
+    setPhoneNumbers((prev) => {
+      if (prev.length > 0) return prev
+      const raw = user.phoneNumber
+      if (!raw) return []
+      return raw.split(/[/,]/).map((s) => s.trim()).filter(Boolean)
+    })
+  }, [user])
 
   const handleCompleteOnboarding = () => {
     router.push('/onboarding')
@@ -184,12 +205,12 @@ export default function ProfilePage() {
   }
 
   const sidebarItems = [
-    { id: "account", label: "Account Management", icon: Settings },
+    { id: "account", label: "My Grovio Account", icon: User },
     { id: "messages", label: "Messages", icon: MessageSquare, badge: 1 },
     { id: "orders", label: "Orders", icon: ClipboardList },
     { id: "vouchers", label: "Discount Vouchers", icon: Tag },
     { id: "gifts", label: "Gifts & Credits", icon: Gift },
-    { id: "management", label: "Account Management", icon: User }
+    { id: "management", label: "Account Management", icon: Settings }
   ]
 
   const renderAccountSection = () => (
@@ -199,7 +220,7 @@ export default function ProfilePage() {
         <Card className="border-2 border-orange-200 bg-orange-50">
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <AlertCircle className="h-6 w-6 text-orange-600" />
               </div>
               <div className="flex-1">
@@ -234,68 +255,171 @@ export default function ProfilePage() {
         </Card>
       )}
 
-      {/* Account Name and Email */}
+      {/* Account Name and Email – table layout */}
       <Card>
         <CardHeader className="bg-linear-to-r from-orange-100 to-orange-50">
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-lg">Account Name</CardTitle>
-            <CardTitle className="text-lg">Email Address</CardTitle>
-          </div>
+          <CardTitle className="text-lg sr-only">Account</CardTitle>
         </CardHeader>
-        <CardContent className="p-6">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-[#D35F0E] rounded-full flex items-center justify-center text-white text-xl font-bold">
-                {user.profilePicture ? (
-                  <Image src={user.profilePicture} alt="Profile" width={64} height={64} className="rounded-full" />
-                ) : (
-                  getInitials(fullName)
-                )}
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold">{fullName}</h3>
-                <p className="text-gray-600">{user.email}</p>
-              </div>
-            </div>
-          </div>
+        <CardContent className="p-0">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="p-4 font-semibold text-gray-700">Account Name</th>
+                <th className="p-4 font-semibold text-gray-700">Email Address</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-gray-100">
+                <td className="p-4">{fullName}</td>
+                <td className="p-4 text-gray-600">{user.email}</td>
+              </tr>
+            </tbody>
+          </table>
         </CardContent>
       </Card>
 
-      {/* Address */}
+      {/* Address – text "Edit" link only; edit mode: per-field inputs + multiple phones */}
       <Card>
         <CardHeader className="bg-linear-to-r from-orange-100 to-orange-50">
           <div className="flex justify-between items-center">
             <CardTitle className="text-lg">Address</CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
+              type="button"
               onClick={() => setIsEditingAddress(!isEditingAddress)}
-              className="text-[#D35F0E] hover:text-[#D35F0E]/80"
+              className="text-[#D35F0E] hover:text-[#D35F0E]/80 font-medium text-sm"
             >
-              <Edit className="h-4 w-4 mr-1" />
               Edit
-            </Button>
+            </button>
           </div>
         </CardHeader>
         <CardContent className="p-6">
           {isEditingAddress ? (
             <div className="space-y-4">
               <div>
-                <Label htmlFor="name">Full Name</Label>
-                <Input id="name" defaultValue={fullName} />
-              </div>
-              <div>
-                <Label htmlFor="location">Location</Label>
-                <LocationPicker 
-                  selectedLocation={selectedLocation}
-                  onLocationSelect={setSelectedLocation}
+                <Label htmlFor="address-name">Full Name</Label>
+                <Input
+                  id="address-name"
+                  value={addressFullName || fullName}
+                  onChange={(e) => setAddressFullName(e.target.value)}
                 />
               </div>
               <div>
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input id="phone" defaultValue={user.phoneNumber} />
+                <Label htmlFor="address-line1">Address line 1</Label>
+                <Input
+                  id="address-line1"
+                  value={addressLine1}
+                  onChange={(e) => setAddressLine1(e.target.value)}
+                />
               </div>
-              <div className="flex gap-2">
+              <div>
+                <Label htmlFor="address-line2">Address line 2</Label>
+                <Input
+                  id="address-line2"
+                  value={addressLine2}
+                  onChange={(e) => setAddressLine2(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="address-area">Area / City</Label>
+                <Input
+                  id="address-area"
+                  value={addressArea}
+                  onChange={(e) => setAddressArea(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="address-region">Region</Label>
+                <Input
+                  id="address-region"
+                  value={addressRegion}
+                  onChange={(e) => setAddressRegion(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Phone numbers</Label>
+                <p className="text-sm text-gray-500 mb-2">
+                  Add a number in the field below and click Add. You can edit or remove existing numbers.
+                </p>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {phoneNumbers.map((num, idx) => (
+                    <div key={idx} className="flex items-center gap-1 bg-gray-100 rounded-md px-2 py-1">
+                      {editingPhoneIndex === idx ? (
+                        <>
+                          <Input
+                            className="h-8 w-36"
+                            value={editingPhoneValue}
+                            onChange={(e) => setEditingPhoneValue(e.target.value)}
+                            placeholder="Phone"
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                            onClick={() => {
+                              const next = [...phoneNumbers]
+                              next[idx] = editingPhoneValue.trim()
+                              setPhoneNumbers(next)
+                              setEditingPhoneIndex(null)
+                              setEditingPhoneValue("")
+                            }}
+                          >
+                            Save
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-sm">{num}</span>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 text-gray-500 hover:text-[#D35F0E]"
+                            onClick={() => {
+                              setEditingPhoneIndex(idx)
+                              setEditingPhoneValue(num)
+                            }}
+                          >
+                            <Edit className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 text-gray-500 hover:text-red-600"
+                            onClick={() => setPhoneNumbers((p) => p.filter((_, i) => i !== idx))}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="New phone number"
+                    value={newPhoneInput}
+                    onChange={(e) => setNewPhoneInput(e.target.value)}
+                    className="max-w-xs"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const v = newPhoneInput.trim()
+                      if (v) {
+                        setPhoneNumbers((p) => [...p, v])
+                        setNewPhoneInput("")
+                      }
+                    }}
+                  >
+                    Add
+                  </Button>
+                </div>
+              </div>
+              <div className="flex gap-2 pt-2">
                 <Button onClick={() => setIsEditingAddress(false)} className="bg-[#D35F0E] hover:bg-[#D35F0E]/90">
                   Save Changes
                 </Button>
@@ -306,9 +430,17 @@ export default function ProfilePage() {
             </div>
           ) : (
             <div className="space-y-2">
-              <p className="font-semibold">{fullName.toUpperCase()}</p>
-              <p>{selectedLocation}</p>
-              <p className="text-gray-600">{user.phoneNumber}</p>
+              <p className="font-semibold">{(addressFullName || fullName).toUpperCase()}</p>
+              <p>{addressLine1}</p>
+              {addressLine2 && <p>{addressLine2}</p>}
+              {addressArea && <p>{addressArea}</p>}
+              {addressRegion && <p>{addressRegion}</p>}
+              {phoneNumbers.length > 0 && (
+                <p className="text-gray-600">{phoneNumbers.join(" / ")}</p>
+              )}
+              {phoneNumbers.length === 0 && user.phoneNumber && (
+                <p className="text-gray-600">{user.phoneNumber}</p>
+              )}
             </div>
           )}
         </CardContent>
@@ -497,60 +629,54 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
-      
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <Card className="overflow-hidden">
-              {/* Header */}
-              <div className="bg-[#D35F0E] p-4 text-white">
-                <div className="flex items-center gap-3">
-                  <User className="h-6 w-6" />
-                  <h2 className="text-lg font-semibold">My Grovio Account</h2>
-                </div>
-              </div>
-              
-              {/* Navigation */}
-              <div className="p-0">
-                {sidebarItems.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveTab(item.id as ProfileTab)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors ${
-                      activeTab === item.id ? "bg-orange-50 text-[#D35F0E] border-r-2 border-[#D35F0E]" : "text-gray-700"
-                    }`}
-                  >
-                    <item.icon className="h-5 w-5" />
-                    <span className="flex-1">{item.label}</span>
-                    {item.badge && (
-                      <Badge className="bg-[#D35F0E] text-white text-xs">
-                        {item.badge}
-                      </Badge>
-                    )}
-                  </button>
-                ))}
-                
-                {/* Logout */}
-                <button 
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors border-t border-gray-200"
-                >
-                  <LogOut className="h-5 w-5" />
-                  <span>Logout</span>
-                </button>
-              </div>
-            </Card>
+      <div className="flex flex-1 min-h-0">
+        {/* Full-height Sidebar */}
+        <aside className="w-64 shrink-0 flex flex-col bg-white border-r border-gray-200 min-h-[calc(100vh-4rem)]">
+          <div className="bg-[#D35F0E] p-4 text-white shrink-0">
+            <div className="flex items-center gap-3">
+              <User className="h-6 w-6" />
+              <h2 className="text-lg font-semibold">My Grovio Account</h2>
+            </div>
           </div>
-
-          {/* Main Content */}
-          <div className="lg:col-span-3">
+          <nav className="flex-1 flex flex-col min-h-0 overflow-y-auto">
+            {sidebarItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id as ProfileTab)}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+                  activeTab === item.id
+                    ? "bg-[#D35F0E] text-white"
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <item.icon className={`h-5 w-5 shrink-0 ${activeTab === item.id ? "text-white" : ""}`} />
+                <span className="flex-1">{item.label}</span>
+                {item.badge != null && (
+                  <Badge className={`text-xs shrink-0 ${activeTab === item.id ? "bg-white text-[#D35F0E]" : "bg-[#D35F0E] text-white"}`}>
+                    {item.badge}
+                  </Badge>
+                )}
+              </button>
+            ))}
+            <div className="mt-auto border-t border-gray-200">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <LogOut className="h-5 w-5" />
+                <span>Logout</span>
+              </button>
+            </div>
+          </nav>
+        </aside>
+        {/* Display area – content for selected tab */}
+        <main className="flex-1 min-w-0 overflow-auto">
+          <div className="container mx-auto px-4 py-8 max-w-4xl">
             {renderContent()}
           </div>
-        </div>
+        </main>
       </div>
     </div>
   )

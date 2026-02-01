@@ -3,6 +3,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { apiService } from '@/lib/api'
 import { tokenManager } from '@/lib/api-client'
+import { env } from '@/lib/env'
 import { useAuthStore } from '@/stores/auth-store'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -107,11 +108,14 @@ export const useGoogleAuth = () => {
   }, [router, searchParams, initializeAuth, refreshUser])
 
   const initializeGoogleOneTap = useCallback(() => {
+    const clientId = env.GOOGLE_CLIENT_ID?.trim()
+    if (!clientId) return
+
     const g = getGoogleGSI()
     if (!g?.accounts?.id) return
 
     g.accounts.id.initialize({
-      client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+      client_id: clientId,
       callback: handleGoogleCredential,
       auto_select: false, // Enable this for even faster sign-in if you want
       cancel_on_tap_outside: true,
@@ -133,6 +137,12 @@ export const useGoogleAuth = () => {
   }, [handleGoogleCredential])
 
   const signInWithGoogle = useCallback(() => {
+    const clientId = env.GOOGLE_CLIENT_ID?.trim()
+    if (!clientId) {
+      toast.error('Google Sign-In is not configured. Add NEXT_PUBLIC_GOOGLE_CLIENT_ID to your .env file.')
+      return
+    }
+
     const g = getGoogleGSI()
     if (!g?.accounts?.id) {
         toast.error('Google Sign-In is initializing, please try again in a moment.')
@@ -143,7 +153,7 @@ export const useGoogleAuth = () => {
 
     // Re-initialize to ensure callback is fresh (and context is correct)
     g.accounts.id.initialize({
-      client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+      client_id: clientId,
       callback: handleGoogleCredential,
       ux_mode: 'popup',
     })

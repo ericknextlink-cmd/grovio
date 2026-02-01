@@ -8,35 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { MapPin, Search, X } from "lucide-react"
 
-// Google Maps types
-declare global {
-  interface Window {
-    google: typeof google
-  }
-}
-
-declare namespace google {
-  namespace maps {
-    namespace places {
-      class AutocompleteService {
-        getPlacePredictions(
-          request: any,
-          callback: (predictions: any, status: any) => void
-        ): void
-      }
-      
-      class PlacesService {
-        constructor(attrContainer: HTMLDivElement)
-        getDetails(request: any, callback: (place: any, status: any) => void): void
-      }
-      
-      enum PlacesServiceStatus {
-        OK = 'OK'
-      }
-    }
-  }
-}
-
 interface LocationPickerProps {
   selectedLocation: string
   onLocationSelect: (location: string) => void

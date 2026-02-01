@@ -171,6 +171,13 @@ export class ApiService {
     })
   }
 
+  async googleSession(session: any): Promise<ApiResponse> {
+    return this.request('/api/auth/google/session', {
+      method: 'POST',
+      body: JSON.stringify({ session }),
+    })
+  }
+
   async signout(): Promise<ApiResponse> {
     return this.request('/api/auth/signout', {
       method: 'POST',

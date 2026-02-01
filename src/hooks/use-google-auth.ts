@@ -54,23 +54,25 @@ export const useGoogleAuth = () => {
     try {
       setIsLoading(true)
       const idToken = response.credential
-      
-      console.log('Received Google ID Token, authenticating with backend...')
-      
-      // Send to backend
+
       const result = await apiService.googleAuth({ idToken })
-      
-      if (result.success && result.accessToken) {
-        // Store tokens
-        tokenManager.setTokens(result.accessToken, result.refreshToken || '')
+
+      // Backend may return tokens top-level or under .data; support both (same as email/password flow)
+      const accessToken =
+        (result as { accessToken?: string }).accessToken ??
+        (result as { data?: { accessToken?: string } }).data?.accessToken
+      const refreshToken =
+        (result as { refreshToken?: string }).refreshToken ??
+        (result as { data?: { refreshToken?: string } }).data?.refreshToken
+
+      if (result.success && accessToken) {
+        // Store tokens immediately (same as email/password) so onboarding and all API calls have them
+        tokenManager.setTokens(accessToken, refreshToken || '')
         if (typeof window !== 'undefined') {
-            localStorage.setItem('accessToken', result.accessToken)
-            if (result.refreshToken) {
-                localStorage.setItem('refreshToken', result.refreshToken)
-            }
+          localStorage.setItem('accessToken', accessToken)
+          if (refreshToken) localStorage.setItem('refreshToken', refreshToken)
         }
 
-        // Sync state
         await initializeAuth()
         await refreshUser()
 
@@ -85,19 +87,17 @@ export const useGoogleAuth = () => {
 
         // Redirect logic
         const redirectParam = searchParams?.get('redirect')
+        const user = (result as { user?: { firstName?: string } }).user ?? (result as { data?: { user?: { firstName?: string } } }).data?.user
         if (!hasCompletedOnboarding) {
-            toast.success('Welcome! Let\'s set up your profile.')
-            router.push('/onboarding')
+          toast.success('Welcome! Let\'s set up your profile.')
+          router.push('/onboarding')
         } else {
-            toast.success(`Welcome back${result.user?.firstName ? ', ' + result.user.firstName : ''}!`)
-            if (redirectParam) {
-                router.push(redirectParam)
-            } else {
-                router.push('/')
-            }
+          toast.success(`Welcome back${user?.firstName ? ', ' + user.firstName : ''}!`)
+          if (redirectParam) router.push(redirectParam)
+          else router.push('/')
         }
       } else {
-        throw new Error(result.message || 'Authentication failed')
+        throw new Error((result as { message?: string }).message || 'Authentication failed')
       }
     } catch (error: any) {
       console.error('Google auth error:', error)

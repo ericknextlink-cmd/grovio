@@ -13,6 +13,7 @@ import { useAuthStore } from "@/stores/auth-store"
 import { toast } from "sonner"
 import Header from "@/components/header"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { env } from "@/lib/env"
 
 interface OnboardingData {
   familySize: number
@@ -93,12 +94,19 @@ export default function OnboardingPage() {
     const loadingToast = toast.loading("Saving your preferences...")
 
     try {
-      // Save preferences to backend
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/preferences`, {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
+      if (!token) {
+        toast.dismiss(loadingToast)
+        toast.error('Session expired. Please sign in again.')
+        router.push('/login')
+        setIsSubmitting(false)
+        return
+      }
+      const response = await fetch(`${env.API_URL}/api/users/preferences`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           familySize: data.familySize,
@@ -136,12 +144,12 @@ export default function OnboardingPage() {
     const loadingToast = toast.loading("Setting up your account...")
     
     try {
-      // Save minimal/default preferences
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/users/preferences`, {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
+      const response = await fetch(`${env.API_URL}/api/users/preferences`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           familySize: 1,

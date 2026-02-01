@@ -194,7 +194,7 @@ export const useAuthStore = create<AuthState>()(
           // For "User not found" - this is expected for new users, keep tokens
           // But still mark as authenticated if we have tokens (they're valid)
           if (isUserNotFound) {
-            console.log('User profile not found (expected for new users)')
+            // Expected for new Google users before profile is synced; no need to log
             // Keep tokens but mark as not authenticated (will need onboarding)
             set({ user: null, isAuthenticated: false, isLoading: false })
             return

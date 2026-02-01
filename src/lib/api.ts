@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// API configuration and base URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+import { env } from '@/lib/env'
+
+// API base URL (uses proxy when NEXT_PUBLIC_USE_API_PROXY=true)
+const API_BASE_URL = env.API_URL
 
 // API response types
 export interface ApiResponse<T = any> {
@@ -98,9 +100,13 @@ export class ApiService {
       const response = await fetch(url, config)
       const data = await response.json()
 
-      if (!response.ok) {
+      // Proxy may return 200 with _statusCode for 401/404 to avoid console errors
+      const status = (data as { _statusCode?: number })._statusCode ?? response.status
+      const effectiveOk = status >= 200 && status < 300
+
+      if (!effectiveOk) {
         // Handle 401 Unauthorized - token might be expired
-        if (response.status === 401) {
+        if (status === 401) {
           // Try to refresh token
           const refreshToken = localStorage.getItem('refreshToken')
           if (refreshToken) {
@@ -138,9 +144,19 @@ export class ApiService {
         }
       }
 
+      // Strip proxy-injected _statusCode from response
+      if ('_statusCode' in data && typeof data === 'object') {
+        const { _statusCode: _, ...rest } = data
+        return rest as ApiResponse<T>
+      }
       return data
     } catch (error) {
-      console.error('API request error:', error)
+      // Only log unexpected errors (e.g. network failure); 401/404 come back as normal responses
+      if (error instanceof TypeError && (error.message === 'Failed to fetch' || error.message.includes('fetch'))) {
+        console.warn('API request failed (network):', (error as Error).message)
+      } else {
+        console.error('API request error:', error)
+      }
       return {
         success: false,
         message: 'Network error',

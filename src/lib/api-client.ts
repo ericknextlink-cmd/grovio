@@ -97,9 +97,16 @@ apiClient.interceptors.request.use(
   }
 )
 
-// Response interceptor to handle token refresh
+// Response interceptor: treat proxy-normalized 200 with _statusCode 401/404 as error so refresh/flow still works
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
+    const statusCode = (response.data as { _statusCode?: number })?._statusCode
+    if (statusCode === 401 || statusCode === 404) {
+      const err = new Error(response.data?.message || 'Request failed') as any
+      err.response = { ...response, status: statusCode, data: response.data }
+      err.isAxiosError = true
+      return Promise.reject(err)
+    }
     return response
   },
   async (error) => {

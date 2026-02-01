@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from 'react'
+import { useCallback, useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { apiService } from '@/lib/api'
@@ -7,13 +7,12 @@ import { env } from '@/lib/env'
 import { useAuthStore } from '@/stores/auth-store'
 import { useAuth } from '@/contexts/AuthContext'
 
-// GSI shape we use (global.d.ts merges this with Maps; here we only need .accounts)
+// GSI shape for popup-only flow (no One Tap)
 interface GoogleGSI {
   accounts?: {
     id: {
       initialize: (config: unknown) => void
       renderButton: (parent: HTMLElement, options: unknown) => void
-      prompt: (callback?: (notification: unknown) => void) => void
     }
   }
 }
@@ -27,27 +26,23 @@ export const useGoogleAuth = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(false)
+  const [isGoogleReady, setIsGoogleReady] = useState(false)
+  const [buttonContainer, setButtonContainer] = useState<HTMLDivElement | null>(null)
+  const renderedRef = useRef(false)
   const { initializeAuth } = useAuthStore()
   const { refreshUser } = useAuth()
 
-  // Load Google Script
+  // Load Google script; no One Tap, no prompt() – popup only (like Vercel)
   useEffect(() => {
     const script = document.createElement('script')
     script.src = 'https://accounts.google.com/gsi/client'
     script.async = true
     script.defer = true
-    script.onload = () => {
-        initializeGoogleOneTap()
-    }
+    script.onload = () => setIsGoogleReady(true)
     document.body.appendChild(script)
-    
     return () => {
-        // Cleanup if needed
-        if (document.body.contains(script)) {
-            document.body.removeChild(script)
-        }
+      if (document.body.contains(script)) document.body.removeChild(script)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleGoogleCredential = useCallback(async (response: any) => {
@@ -79,8 +74,9 @@ export const useGoogleAuth = () => {
         // Check onboarding
         let hasCompletedOnboarding = false
         try {
-            const onboardingRes = await apiService.getOnboardingStatus()
-            hasCompletedOnboarding = onboardingRes.data?.onboardingCompleted || false
+          const onboardingRes = await apiService.getOnboardingStatus()
+          const data = onboardingRes.data as { data?: { onboardingCompleted?: boolean }; onboardingCompleted?: boolean } | undefined
+          hasCompletedOnboarding = data?.data?.onboardingCompleted ?? data?.onboardingCompleted ?? false
         } catch (e) {
             console.warn('Failed to check onboarding:', e)
         }
@@ -107,83 +103,47 @@ export const useGoogleAuth = () => {
     }
   }, [router, searchParams, initializeAuth, refreshUser])
 
-  const initializeGoogleOneTap = useCallback(() => {
+  // When script is ready and we have a container, initialize with popup and render the official Google button
+  // (like Vercel: clicking it opens the account-selection popup)
+  useEffect(() => {
     const clientId = env.GOOGLE_CLIENT_ID?.trim()
-    if (!clientId) return
+    if (!isGoogleReady || !buttonContainer || !clientId) return
 
     const g = getGoogleGSI()
     if (!g?.accounts?.id) return
 
-    // Initialize GSI so the "Login with Google" button works. Do NOT call prompt() here:
-    // that would show One Tap and auto-detect the account instead of opening the popup
-    // when the user clicks the button.
+    if (renderedRef.current) return
+    renderedRef.current = true
+
     g.accounts.id.initialize({
       client_id: clientId,
       callback: handleGoogleCredential,
+      ux_mode: 'popup', // always open account-selection popup when user clicks the button
       auto_select: false,
-      cancel_on_tap_outside: true,
-      use_fedcm_for_prompt: true,
     })
-    // Intentionally do not call g.accounts.id.prompt() so the user must click
-    // "Login with Google" to get the popup flow.
-  }, [handleGoogleCredential])
 
-  const signInWithGoogle = useCallback(() => {
-    const clientId = env.GOOGLE_CLIENT_ID?.trim()
-    if (!clientId) {
-      toast.error('Google Sign-In is not configured. Add NEXT_PUBLIC_GOOGLE_CLIENT_ID to your .env file.')
-      return
+    g.accounts.id.renderButton(buttonContainer, {
+      type: 'standard',
+      size: 'large',
+      theme: 'outline',
+      text: 'continue_with',
+      shape: 'rectangular',
+      width: 320,
+    })
+
+    return () => {
+      renderedRef.current = false
+      buttonContainer.innerHTML = ''
     }
+  }, [isGoogleReady, buttonContainer, handleGoogleCredential])
 
-    const g = getGoogleGSI()
-    if (!g?.accounts?.id) {
-        toast.error('Google Sign-In is initializing, please try again in a moment.')
-        return
-    }
-
-    setIsLoading(true)
-
-    // Re-initialize to ensure callback is fresh (and context is correct)
-    g.accounts.id.initialize({
-      client_id: clientId,
-      callback: handleGoogleCredential,
-      ux_mode: 'popup',
-      use_fedcm_for_button: true, // FedCM migration: use FedCM for button flow where supported
-    })
-
-    // Create a temporary container
-    const div = document.createElement('div')
-    div.style.position = 'absolute'
-    div.style.top = '-9999px'
-    div.style.left = '-9999px'
-    document.body.appendChild(div)
-
-    g.accounts.id.renderButton(div, {
-        type: 'standard',
-        size: 'large',
-    })
-
-    // Click the button inside the container
-    // We need to wait a tiny bit for render
-    setTimeout(() => {
-        const button = div.querySelector('div[role="button"]') as HTMLElement
-        if (button) {
-            button.click()
-        } else {
-            console.error('Could not find Google button to click')
-            setIsLoading(false)
-        }
-        
-        // Cleanup
-        setTimeout(() => {
-            document.body.removeChild(div)
-        }, 1000)
-    }, 100)
-
-  }, [handleGoogleCredential])
+  const setGoogleButtonRef = useCallback((el: HTMLDivElement | null) => {
+    setButtonContainer(el)
+  }, [])
 
   return {
-    signInWithGoogle,
+    setGoogleButtonRef,
     isLoading,
+    isGoogleReady,
   }
 }

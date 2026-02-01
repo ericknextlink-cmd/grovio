@@ -18,7 +18,8 @@ export function LoginForm() {
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const { signin, isLoading, error, clearError } = useAuthStore()
-  const { signInWithGoogle } = useGoogleAuth()
+  const { setGoogleButtonRef, isLoading: isGoogleLoading, isGoogleReady } = useGoogleAuth()
+  const isLoadingForm = isLoading || isGoogleLoading
 
   const {
     register,
@@ -55,10 +56,6 @@ export function LoginForm() {
     }
   }
 
-  const handleGoogleLogin = async () => {
-    await signInWithGoogle()
-  }
-
   return (
     <div className="w-full max-w-md mx-auto">
       <Image src="/logo.png" alt="Grovio" width={40} height={40} className="h-16 mt-6 mb-8 w-auto mx-auto" priority />
@@ -87,7 +84,7 @@ export function LoginForm() {
             placeholder="e.g. you@example.com" 
             {...register("email")}
             className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E]"
-            disabled={isLoading}
+            disabled={isLoadingForm}
           />
           {errors.email && (
             <p className="text-sm text-red-600">{errors.email.message}</p>
@@ -105,13 +102,13 @@ export function LoginForm() {
               placeholder="Enter your password" 
               {...register("password")}
               className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E] pr-10"
-              disabled={isLoading}
+              disabled={isLoadingForm}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              disabled={isLoading}
+              disabled={isLoadingForm}
             >
               {showPassword ? (
                 <EyeOff className="h-5 w-5" />
@@ -128,9 +125,9 @@ export function LoginForm() {
         <Button 
           type="submit" 
           className="w-full rounded-full bg-[#D35F0E] hover:bg-[#D35F0E]/90 text-white font-medium py-8 text-2xl mt-6"
-          disabled={isLoading}
+          disabled={isLoadingForm}
         >
-          {isLoading ? "Signing in..." : "Sign in"}
+          {isLoadingForm ? "Signing in..." : "Sign in"}
         </Button>
       </form>
 
@@ -144,17 +141,15 @@ export function LoginForm() {
         </div>
       </div>
 
-      {/* Google Login */}
-      <Button 
-        type="button" 
-        variant="outline" 
-        className="w-full bg-white border-gray-300 hover:bg-gray-50 text-gray-700 py-8 text-2xl rounded-full" 
-        onClick={handleGoogleLogin}
-        disabled={isLoading}
-      >
-        <Image src="/google.svg" alt="Google" width={24} height={24} className="w-8 h-8 mr-2" />
-        {isLoading ? "Signing in..." : "Login with Google"}
-      </Button>
+      {/* Google Login – official button opens account-selection popup (like Vercel) */}
+      <div
+        ref={setGoogleButtonRef}
+        className="min-h-[48px] w-full flex items-center justify-center rounded-full border border-gray-300 bg-white [&>div]:!min-h-[48px] [&>div]:!rounded-full"
+        aria-label="Login with Google"
+      />
+      {!isGoogleReady && (
+        <p className="text-center text-sm text-gray-500 mt-2">Loading Google Sign-In…</p>
+      )}
 
       {/* Account Creation */}
       <div className="text-center mt-6">
@@ -164,7 +159,7 @@ export function LoginForm() {
         <Link href="/signup">
           <Button 
             className="w-full bg-[#D35F0E] hover:bg-[#D35F0E]/90 text-white font-medium py-8 text-2xl rounded-full"
-            disabled={isLoading}
+            disabled={isLoadingForm}
           >
             Create Account
           </Button>

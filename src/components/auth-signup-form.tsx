@@ -31,7 +31,8 @@ export function SignupForm() {
   const [newsletter, setNewsletter] = useState(false)
   const [selectedCountryCode, setSelectedCountryCode] = useState("+233")
   const { signup, error, clearError } = useAuthStore()
-  const { signInWithGoogle } = useGoogleAuth()
+  const { setGoogleButtonRef, isLoading: isGoogleLoading, isGoogleReady } = useGoogleAuth()
+  const isLoadingForm = isLoading || isGoogleLoading
 
   const {
     register,
@@ -72,10 +73,6 @@ export function SignupForm() {
     }
   }
 
-  const handleGoogleLogin = async () => {
-    await signInWithGoogle()
-  }
-
   const handleCountryCodeChange = (code: string) => {
     setSelectedCountryCode(code)
   }
@@ -108,7 +105,7 @@ export function SignupForm() {
             placeholder="First name" 
             {...register("firstName")}
             className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E]"
-            disabled={isLoading}
+            disabled={isLoadingForm}
           />
           {errors.firstName && (
             <p className="text-sm text-red-600">{errors.firstName.message}</p>
@@ -125,7 +122,7 @@ export function SignupForm() {
             placeholder="Last name" 
             {...register("lastName")}
             className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E]"
-            disabled={isLoading}
+            disabled={isLoadingForm}
           />
           {errors.lastName && (
             <p className="text-sm text-red-600">{errors.lastName.message}</p>
@@ -142,7 +139,7 @@ export function SignupForm() {
             placeholder="you@example.com" 
             {...register("email")}
             className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E]"
-            disabled={isLoading}
+            disabled={isLoadingForm}
           />
           {errors.email && (
             <p className="text-sm text-red-600">{errors.email.message}</p>
@@ -157,7 +154,7 @@ export function SignupForm() {
             <Select 
               value={selectedCountryCode} 
               onValueChange={handleCountryCodeChange}
-              disabled={isLoading}
+              disabled={isLoadingForm}
             >
               <SelectTrigger className="w-24 border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E]">
                 <SelectValue />
@@ -176,7 +173,7 @@ export function SignupForm() {
               placeholder="1234567890" 
               {...register("phoneNumber")}
               className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E]"
-              disabled={isLoading}
+              disabled={isLoadingForm}
             />
           </div>
           {errors.phoneNumber && (
@@ -195,13 +192,13 @@ export function SignupForm() {
               placeholder="Create a password" 
               {...register("password")}
               className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E] pr-10"
-              disabled={isLoading}
+              disabled={isLoadingForm}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              disabled={isLoading}
+              disabled={isLoadingForm}
             >
               {showPassword ? (
                 <EyeOff className="h-5 w-5" />
@@ -226,13 +223,13 @@ export function SignupForm() {
               placeholder="Confirm your password" 
               {...register("confirmPassword")}
               className="border-gray-300 py-6 focus:border-[#D35F0E] focus:ring-[#D35F0E] pr-10"
-              disabled={isLoading}
+              disabled={isLoadingForm}
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              disabled={isLoading}
+              disabled={isLoadingForm}
             >
               {showConfirmPassword ? (
                 <EyeOff className="h-5 w-5" />
@@ -253,7 +250,7 @@ export function SignupForm() {
             className="mt-1 scale-[1.2]" 
             checked={newsletter}
             onChange={(e) => setNewsletter(e.target.checked)}
-            disabled={isLoading}
+            disabled={isLoadingForm}
           />
           <label htmlFor="newsletter">
             Sign up for our newsletter to stay in the loop about hot deals, new products, and more. Don&apos;t worry, you can unsubscribe at any time.
@@ -267,7 +264,7 @@ export function SignupForm() {
         <Button 
           type="submit" 
           className="w-full rounded-full bg-[#D35F0E] hover:bg-[#D35F0E]/90 text-white font-medium py-8 text-2xl"
-          disabled={isLoading}
+          disabled={isLoadingForm}
         >
           {isLoading ? "Creating Account..." : "Create Account"}
         </Button>
@@ -283,17 +280,15 @@ export function SignupForm() {
         </div>
       </div>
 
-      {/* Google Signup */}
-      <Button 
-        type="button" 
-        variant="outline" 
-        className="w-full bg-white border-gray-300 hover:bg-gray-50 text-gray-700 py-8 text-2xl rounded-full" 
-        onClick={handleGoogleLogin}
-        disabled={isLoading}
-      >
-        <Image src="/google.svg" alt="Google" width={24} height={24} className="w-8 h-8 mr-2" />
-        {isLoading ? "Signing up..." : "Sign up with Google"}
-      </Button>
+      {/* Google Signup – official button opens account-selection popup (like Vercel) */}
+      <div
+        ref={setGoogleButtonRef}
+        className="min-h-[48px] w-full flex items-center justify-center rounded-full border border-gray-300 bg-white [&>div]:!min-h-[48px] [&>div]:!rounded-full"
+        aria-label="Sign up with Google"
+      />
+      {!isGoogleReady && (
+        <p className="text-center text-sm text-gray-500 mt-2">Loading Google Sign-In…</p>
+      )}
 
       <div className="text-center mt-6">
         <p className="text-sm text-gray-600">

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-namespace */
 "use client"
 
 import { useState, useEffect, useRef, useMemo } from "react"
@@ -13,169 +11,127 @@ interface LocationPickerProps {
   onLocationSelect: (location: string) => void
 }
 
-interface PlaceResult {
+/** Prediction from server autocomplete (no client-side Maps) */
+interface AutocompletePrediction {
   place_id: string
-  formatted_address: string
-  name: string
-  geometry: {
-    location: {
-      lat: number
-      lng: number
-    }
-  }
+  description: string
 }
+
+/** Display item: either default (no place_id) or autocomplete prediction; on select we fetch details */
+type ListItem = { place_id: string; description: string; isDefault?: boolean }
 
 export default function LocationPicker({ selectedLocation, onLocationSelect }: LocationPickerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [searchResults, setSearchResults] = useState<PlaceResult[]>([])
+  const [searchResults, setSearchResults] = useState<ListItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null)
-  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null)
 
-  // Initialize Google Places API
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.google) {
-      autocompleteServiceRef.current = new google.maps.places.AutocompleteService()
-      const mapDiv = document.createElement('div')
-      placesServiceRef.current = new google.maps.places.PlacesService(mapDiv)
-    }
-  }, [])
+  const defaultAccraLocations = useMemo(
+    () => [
+      "Accra Central, Accra, Ghana",
+      "East Legon, Accra, Ghana",
+      "Osu, Accra, Ghana",
+      "Labone, Accra, Ghana",
+      "Cantonments, Accra, Ghana",
+      "Airport Residential, Accra, Ghana",
+      "Tema, Greater Accra, Ghana",
+    ],
+    []
+  )
 
-  // Default Accra locations
-  const defaultAccraLocations = useMemo(() => [
-    "Accra Central, Accra, Ghana",
-    "East Legon, Accra, Ghana", 
-    "Osu, Accra, Ghana",
-    "Labone, Accra, Ghana",
-    "Cantonments, Accra, Ghana",
-    "Airport Residential, Accra, Ghana",
-    "Tema, Greater Accra, Ghana"
-  ], [])
-
-  // Load default locations on mount
-  useEffect(() => {
-    if (!searchQuery && searchResults.length === 0) {
-      setSearchResults(defaultAccraLocations.map((location, index) => ({
+  const defaultResults: ListItem[] = useMemo(
+    () =>
+      defaultAccraLocations.map((location, index) => ({
         place_id: `default_${index}`,
-        formatted_address: location,
-        name: location.split(',')[0],
-        geometry: {
-          location: {
-            lat: 5.6037,
-            lng: -0.1870
-          }
-        }
-      })))
-    }
-  }, [searchQuery, searchResults.length, defaultAccraLocations])
+        description: location,
+        isDefault: true,
+      })),
+    [defaultAccraLocations]
+  )
 
-  // Handle search with debouncing
+  useEffect(() => {
+    if (isOpen && !searchQuery.trim() && searchResults.length === 0) {
+      setSearchResults(defaultResults)
+    }
+  }, [isOpen, searchQuery, searchResults.length, defaultResults])
+
   const handleSearch = (query: string) => {
     setSearchQuery(query)
     setError("")
 
-    // Clear previous timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current)
     }
 
     if (!query.trim()) {
-      // Show default locations when search is empty
-      setSearchResults(defaultAccraLocations.map((location, index) => ({
-        place_id: `default_${index}`,
-        formatted_address: location,
-        name: location.split(',')[0],
-        geometry: {
-          location: {
-            lat: 5.6037,
-            lng: -0.1870
-          }
-        }
-      })))
+      setSearchResults(defaultResults)
       return
     }
 
-    // Debounce search
     searchTimeoutRef.current = setTimeout(() => {
       performSearch(query)
     }, 300)
   }
 
+  /** Server-side autocomplete only; details fetched on select (efficient) */
   const performSearch = async (query: string) => {
-    if (!autocompleteServiceRef.current) {
-      setError("Google Places API not loaded")
+    setIsLoading(true)
+    setError("")
+
+    try {
+      const res = await fetch(
+        `/api/places/autocomplete?input=${encodeURIComponent(query)}`
+      )
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || "Search failed")
+        setSearchResults([])
+        return
+      }
+
+      const predictions: AutocompletePrediction[] = data.predictions || []
+      setSearchResults(
+        predictions.map((p) => ({ place_id: p.place_id, description: p.description }))
+      )
+    } catch (err) {
+      setError("Search failed. Please try again.")
+      setSearchResults([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  /** On select: default item uses description as address; Google place fetches details once */
+  const handleLocationSelect = async (item: ListItem) => {
+    if (item.isDefault || item.place_id.startsWith("default_")) {
+      onLocationSelect(item.description)
+      setIsOpen(false)
+      setSearchQuery("")
       return
     }
 
     setIsLoading(true)
     setError("")
-
     try {
-      const request = {
-        input: query,
-        componentRestrictions: { country: 'gh' }, // Restrict to Ghana
-        types: ['establishment', 'geocode']
+      const res = await fetch(
+        `/api/places/details?place_id=${encodeURIComponent(item.place_id)}`
+      )
+      const data = await res.json()
+      if (!res.ok || !data.formatted_address) {
+        setError(data.error || "Could not get address")
+        return
       }
-
-      autocompleteServiceRef.current.getPlacePredictions(request, (predictions, status) => {
-        setIsLoading(false)
-        
-        if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
-          // Get detailed place information
-          const detailedResults: PlaceResult[] = []
-          let processedCount = 0
-
-          predictions.slice(0, 7).forEach((prediction: any) => {
-            if (placesServiceRef.current) {
-              placesServiceRef.current.getDetails(
-                {
-                  placeId: prediction.place_id,
-                  fields: ['place_id', 'formatted_address', 'name', 'geometry']
-                },
-                (place, placeStatus) => {
-                  processedCount++
-                  
-                  if (placeStatus === google.maps.places.PlacesServiceStatus.OK && place) {
-                    detailedResults.push({
-                      place_id: place.place_id || '',
-                      formatted_address: place.formatted_address || '',
-                      name: place.name || '',
-                      geometry: {
-                        location: {
-                          lat: place.geometry?.location?.lat() || 0,
-                          lng: place.geometry?.location?.lng() || 0
-                        }
-                      }
-                    })
-                  }
-
-                  // Update results when all requests are processed
-                  if (processedCount === Math.min(predictions.length, 7)) {
-                    setSearchResults(detailedResults)
-                  }
-                }
-              )
-            }
-          })
-        } else {
-          setError("No locations found. Try a different search term.")
-          setSearchResults([])
-        }
-      })
+      onLocationSelect(data.formatted_address)
+      setIsOpen(false)
+      setSearchQuery("")
     } catch (err) {
+      setError("Could not load address")
+    } finally {
       setIsLoading(false)
-      setError("Search failed. Please try again.")
-      console.error("Location search error:", err)
     }
-  }
-
-  const handleLocationSelect = (location: PlaceResult) => {
-    onLocationSelect(location.formatted_address)
-    setIsOpen(false)
-    setSearchQuery("")
   }
 
   const handleClose = () => {
@@ -186,7 +142,6 @@ export default function LocationPicker({ selectedLocation, onLocationSelect }: L
 
   return (
     <>
-      {/* Location Button */}
       <Button
         variant="outline"
         onClick={() => setIsOpen(true)}
@@ -198,12 +153,10 @@ export default function LocationPicker({ selectedLocation, onLocationSelect }: L
         <MapPin className="h-4 w-4 text-[#D35F0E]" />
       </Button>
 
-      {/* Modal */}
       {isOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-md max-h-[80vh] overflow-hidden">
             <CardContent className="p-0">
-              {/* Header */}
               <div className="flex items-center justify-between p-4 border-b">
                 <h3 className="text-lg font-semibold">Select Location</h3>
                 <Button
@@ -216,7 +169,6 @@ export default function LocationPicker({ selectedLocation, onLocationSelect }: L
                 </Button>
               </div>
 
-              {/* Search Bar */}
               <div className="p-4 border-b-2">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -232,27 +184,25 @@ export default function LocationPicker({ selectedLocation, onLocationSelect }: L
                 )}
               </div>
 
-              {/* Results */}
               <div className="max-h-60 overflow-y-auto">
                 {isLoading ? (
                   <div className="p-4 text-center text-gray-500">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#D35F0E] mx-auto mb-2"></div>
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#D35F0E] mx-auto mb-2" />
                     Searching...
                   </div>
                 ) : searchResults.length > 0 ? (
                   <div className="space-y-1">
-                    {searchResults.map((location) => (
+                    {searchResults.map((item) => (
                       <button
-                        key={location.place_id}
-                        onClick={() => handleLocationSelect(location)}
+                        key={item.place_id}
+                        onClick={() => handleLocationSelect(item)}
                         className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
                       >
                         <div className="flex items-start gap-3">
                           <MapPin className="h-4 w-4 text-[#D35F0E] mt-0.5 shrink-0" />
-                          <div>
-                            <p className="font-medium text-gray-900">{location.name}</p>
-                            <p className="text-sm text-gray-600">{location.formatted_address}</p>
-                          </div>
+                          <p className="text-sm text-gray-900">
+                            {item.description}
+                          </p>
                         </div>
                       </button>
                     ))}

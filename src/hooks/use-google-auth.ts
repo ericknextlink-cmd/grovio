@@ -114,18 +114,18 @@ export const useGoogleAuth = () => {
     const g = getGoogleGSI()
     if (!g?.accounts?.id) return
 
+    // Initialize GSI so the "Login with Google" button works. Do NOT call prompt() here:
+    // that would show One Tap and auto-detect the account instead of opening the popup
+    // when the user clicks the button.
     g.accounts.id.initialize({
       client_id: clientId,
       callback: handleGoogleCredential,
       auto_select: false,
       cancel_on_tap_outside: true,
-      use_fedcm_for_prompt: true, // FedCM migration: browser-mediated prompt, no deprecated display/skip APIs
+      use_fedcm_for_prompt: true,
     })
-
-    if (!tokenManager.isAuthenticated()) {
-      // FedCM: do not use isNotDisplayed/getNotDisplayedReason or getSkippedReason; prompt() can be called with no callback
-      g.accounts.id.prompt()
-    }
+    // Intentionally do not call g.accounts.id.prompt() so the user must click
+    // "Login with Google" to get the popup flow.
   }, [handleGoogleCredential])
 
   const signInWithGoogle = useCallback(() => {

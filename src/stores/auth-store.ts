@@ -119,10 +119,11 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      signinWithGoogle: async (idToken, nonce) => {
+      signinWithGoogle: async (idToken, _nonce?) => {
         set({ isLoading: true, error: null })
         try {
-          const response = await api.auth.google({ idToken, nonce })
+          // Do not send nonce: Supabase + Google ID token require nonce to be omitted
+          const response = await api.auth.google({ idToken })
           const { success, message, user, accessToken, refreshToken } = response.data as any
 
           if (success && user && accessToken && refreshToken) {

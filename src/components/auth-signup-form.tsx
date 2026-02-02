@@ -31,7 +31,7 @@ export function SignupForm() {
   const [newsletter, setNewsletter] = useState(false)
   const [selectedCountryCode, setSelectedCountryCode] = useState("+233")
   const { signup, error, clearError } = useAuthStore()
-  const { setGoogleButtonRef, openGoogleSignIn, isLoading: isGoogleLoading, isGoogleReady } = useGoogleAuth()
+  const { setGoogleButtonRef, isLoading: isGoogleLoading, isGoogleReady } = useGoogleAuth()
   const isLoadingForm = isLoading || isGoogleLoading
 
   const {
@@ -280,24 +280,17 @@ export function SignupForm() {
         </div>
       </div>
 
-      <div className="relative">
-        {/* Hidden container for GSI button (off-screen, never captures clicks) */}
+      <div className="relative w-full min-h-[52px] rounded-full border border-gray-300 bg-white overflow-hidden">
+        {/* Google button renders here (in an iframe); real click opens popup */}
+        <div ref={setGoogleButtonRef} className="min-h-[52px] w-full [&>div]:!min-h-[52px] [&>div]:!w-full [&>iframe]:!min-h-[52px] [&>iframe]:!w-full" />
+        {/* Overlay: generic label only; pointer-events-none so click goes to Google button underneath */}
         <div
-          ref={setGoogleButtonRef}
-          className="absolute left-[-9999px] top-0 h-12 w-80 overflow-hidden pointer-events-none"
+          className="absolute inset-0 flex items-center justify-center gap-2 text-gray-700 py-8 text-2xl pointer-events-none rounded-full"
           aria-hidden
-        />
-        {/* Generic "Sign up with Google" button – always clickable, opens account-selection popup */}
-        <Button
-          type="button"
-          variant="outline"
-          className="relative z-10 w-full bg-white border-gray-300 hover:bg-gray-50 text-gray-700 py-8 text-2xl rounded-full"
-          onClick={openGoogleSignIn}
-          disabled={isGoogleLoading}
         >
-          <Image src="/google.svg" alt="" width={24} height={24} className="w-8 h-8 mr-2" />
+          <Image src="/google.svg" alt="" width={24} height={24} className="w-8 h-8" />
           {isGoogleLoading ? "Signing up..." : "Sign up with Google"}
-        </Button>
+        </div>
       </div>
       {!isGoogleReady && (
         <p className="text-center text-sm text-gray-500 mt-2">Loading Google Sign-In…</p>

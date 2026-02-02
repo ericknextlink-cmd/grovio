@@ -31,7 +31,7 @@ export function SignupForm() {
   const [newsletter, setNewsletter] = useState(false)
   const [selectedCountryCode, setSelectedCountryCode] = useState("+233")
   const { signup, error, clearError } = useAuthStore()
-  const { setGoogleButtonRef, isLoading: isGoogleLoading, isGoogleReady } = useGoogleAuth()
+  const { setGoogleButtonRef, openGoogleSignIn, isLoading: isGoogleLoading, isGoogleReady } = useGoogleAuth()
   const isLoadingForm = isLoading || isGoogleLoading
 
   const {
@@ -280,12 +280,23 @@ export function SignupForm() {
         </div>
       </div>
 
-      {/* Google Signup – official button opens account-selection popup (like Vercel) */}
+      {/* Hidden container for GSI button (clicked programmatically so popup opens; no account on our button) */}
       <div
         ref={setGoogleButtonRef}
-        className="min-h-[48px] w-full flex items-center justify-center rounded-full border border-gray-300 bg-white [&>div]:!min-h-[48px] [&>div]:!rounded-full"
-        aria-label="Sign up with Google"
+        className="absolute left-[-9999px] top-0 h-12 w-80 overflow-hidden"
+        aria-hidden
       />
+      {/* Generic "Sign up with Google" button – always shows same label, opens account-selection popup on click */}
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full bg-white border-gray-300 hover:bg-gray-50 text-gray-700 py-8 text-2xl rounded-full"
+        onClick={openGoogleSignIn}
+        disabled={!isGoogleReady || isGoogleLoading}
+      >
+        <Image src="/google.svg" alt="" width={24} height={24} className="w-8 h-8 mr-2" />
+        {isGoogleLoading ? "Signing up..." : "Sign up with Google"}
+      </Button>
       {!isGoogleReady && (
         <p className="text-center text-sm text-gray-500 mt-2">Loading Google Sign-In…</p>
       )}

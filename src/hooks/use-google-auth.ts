@@ -28,6 +28,7 @@ export const useGoogleAuth = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleReady, setIsGoogleReady] = useState(false)
   const [buttonContainer, setButtonContainer] = useState<HTMLDivElement | null>(null)
+  const containerRef = useRef<HTMLDivElement | null>(null)
   const renderedRef = useRef(false)
   const { initializeAuth } = useAuthStore()
   const { refreshUser } = useAuth()
@@ -138,11 +139,20 @@ export const useGoogleAuth = () => {
   }, [isGoogleReady, buttonContainer, handleGoogleCredential])
 
   const setGoogleButtonRef = useCallback((el: HTMLDivElement | null) => {
+    containerRef.current = el
     setButtonContainer(el)
+  }, [])
+
+  // Click the hidden Google button so the account-selection popup opens (generic button stays normal)
+  const openGoogleSignIn = useCallback(() => {
+    if (!containerRef.current) return
+    const btn = containerRef.current.querySelector('div[role="button"]') as HTMLElement | null
+    if (btn) btn.click()
   }, [])
 
   return {
     setGoogleButtonRef,
+    openGoogleSignIn,
     isLoading,
     isGoogleReady,
   }

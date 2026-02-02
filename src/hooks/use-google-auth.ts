@@ -145,9 +145,16 @@ export const useGoogleAuth = () => {
 
   // Click the hidden Google button so the account-selection popup opens (generic button stays normal)
   const openGoogleSignIn = useCallback(() => {
-    if (!containerRef.current) return
+    if (!containerRef.current) {
+      toast.error('Google Sign-In is still loading. Please try again in a moment.')
+      return
+    }
     const btn = containerRef.current.querySelector('div[role="button"]') as HTMLElement | null
-    if (btn) btn.click()
+    if (btn) {
+      btn.click()
+    } else {
+      toast.error('Google Sign-In is still loading. Please try again in a moment.')
+    }
   }, [])
 
   return {

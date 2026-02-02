@@ -141,23 +141,25 @@ export function LoginForm() {
         </div>
       </div>
 
-      {/* Hidden container for GSI button (clicked programmatically so popup opens; no account on our button) */}
-      <div
-        ref={setGoogleButtonRef}
-        className="absolute left-[-9999px] top-0 h-12 w-80 overflow-hidden"
-        aria-hidden
-      />
-      {/* Generic "Login with Google" button – always shows same label, opens account-selection popup on click */}
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full bg-white border-gray-300 hover:bg-gray-50 text-gray-700 py-8 text-2xl rounded-full"
-        onClick={openGoogleSignIn}
-        disabled={!isGoogleReady || isGoogleLoading}
-      >
-        <Image src="/google.svg" alt="" width={24} height={24} className="w-8 h-8 mr-2" />
-        {isGoogleLoading ? "Signing in..." : "Login with Google"}
-      </Button>
+      <div className="relative">
+        {/* Hidden container for GSI button (off-screen, never captures clicks) */}
+        <div
+          ref={setGoogleButtonRef}
+          className="absolute left-[-9999px] top-0 h-12 w-80 overflow-hidden pointer-events-none"
+          aria-hidden
+        />
+        {/* Generic "Login with Google" button – always clickable, opens account-selection popup */}
+        <Button
+          type="button"
+          variant="outline"
+          className="relative z-10 w-full bg-white border-gray-300 hover:bg-gray-50 text-gray-700 py-8 text-2xl rounded-full"
+          onClick={openGoogleSignIn}
+          disabled={isGoogleLoading}
+        >
+          <Image src="/google.svg" alt="" width={24} height={24} className="w-8 h-8 mr-2" />
+          {isGoogleLoading ? "Signing in..." : "Login with Google"}
+        </Button>
+      </div>
       {!isGoogleReady && (
         <p className="text-center text-sm text-gray-500 mt-2">Loading Google Sign-In…</p>
       )}

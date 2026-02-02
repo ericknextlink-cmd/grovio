@@ -280,17 +280,9 @@ export function SignupForm() {
         </div>
       </div>
 
-      <div className="relative w-full min-h-[52px] rounded-full border border-gray-300 bg-white overflow-hidden">
-        {/* Google button renders here (in an iframe); real click opens popup */}
-        <div ref={setGoogleButtonRef} className="min-h-[52px] w-full [&>div]:!min-h-[52px] [&>div]:!w-full [&>iframe]:!min-h-[52px] [&>iframe]:!w-full" />
-        {/* Overlay: generic label only; pointer-events-none so click goes to Google button underneath */}
-        <div
-          className="absolute inset-0 flex items-center justify-center gap-2 text-gray-700 py-8 text-2xl pointer-events-none rounded-full"
-          aria-hidden
-        >
-          <Image src="/google.svg" alt="" width={24} height={24} className="w-8 h-8" />
-          {isGoogleLoading ? "Signing up..." : "Sign up with Google"}
-        </div>
+      {/* One Google control: shows "Continue as [User]" when account detected, else "Continue with Google" */}
+      <div className="w-full min-h-[52px] rounded-full border border-gray-300 bg-white overflow-hidden flex items-center justify-center [&>div]:!min-h-[52px] [&>div]:!w-full [&>iframe]:!min-h-[52px] [&>iframe]:!w-full">
+        <div ref={setGoogleButtonRef} className="min-h-[52px] w-full" />
       </div>
       {!isGoogleReady && (
         <p className="text-center text-sm text-gray-500 mt-2">Loading Google Sign-In…</p>
